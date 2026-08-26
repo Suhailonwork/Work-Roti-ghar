@@ -11,7 +11,7 @@
 
 do $$
 declare
-  v_email text := 'change-me@example.com';   -- <<< EDIT THIS
+  v_email text := 'Suhail.work71@gmail.com';   -- <<< EDIT THIS
   v_id    uuid;
 begin
   select id into v_id from auth.users where lower(email) = lower(v_email);
