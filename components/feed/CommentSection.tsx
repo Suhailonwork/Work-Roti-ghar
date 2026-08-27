@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Flag, Heart, MessageCircle, Trash2 } from 'lucide-react';
@@ -13,6 +13,7 @@ import {
 import { Avatar, Badge, Textarea } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { Modal } from '@/components/ui/Modal';
 import { ReportModal } from './PostInteractions';
 import { cn, timeAgo } from '@/lib/utils';
@@ -35,20 +36,22 @@ function CommentForm({
   compact?: boolean;
 }) {
   const router = useRouter();
-  const [state, formAction] = useActionState(createCommentAction, initialState);
   const [value, setValue] = useState('');
 
-  useEffect(() => {
-    if (state.ok) {
+  // The textarea is controlled, so clearing it is this component's job; the
+  // hook resets nothing here. A rejected comment keeps what was written.
+  const { state, pending, formProps } = useFormAction(createCommentAction, {
+    resetOnSuccess: false,
+    initialState,
+    onSuccess: () => {
       setValue('');
       onDone?.();
       router.refresh();
-    }
-    // `state` is replaced wholesale on each submission, so this fires once per success.
-  }, [state, onDone, router]);
+    },
+  });
 
   return (
-    <form action={formAction} className={cn('space-y-2', compact && 'mt-2')}>
+    <form {...formProps} className={cn('space-y-2', compact && 'mt-2')}>
       <input type="hidden" name="post_id" value={postId} />
       {parentId && <input type="hidden" name="parent_id" value={parentId} />}
 
@@ -71,7 +74,7 @@ function CommentForm({
             Cancel
           </Button>
         )}
-        <SubmitButton size="sm" disabled={!value.trim()} pendingLabel="Posting…">
+        <SubmitButton pending={pending} size="sm" disabled={!value.trim()} pendingLabel="Posting…">
           {parentId ? 'Reply' : 'Comment'}
         </SubmitButton>
       </div>

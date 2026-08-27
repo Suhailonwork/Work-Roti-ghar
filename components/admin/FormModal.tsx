@@ -1,11 +1,12 @@
 'use client';
 
-import { useActionState, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, type ButtonVariant } from '@/components/ui/Button';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { Modal } from '@/components/ui/Modal';
 import { FormMessage } from '@/components/auth/FormMessage';
 import type { FormState } from '@/lib/validation';
@@ -45,15 +46,22 @@ export function FormModal({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(openOnMount);
-  const [state, formAction] = useActionState(action, initialState);
 
-  useEffect(() => {
-    if (state.ok) {
-      toast.success(state.message ?? 'Saved.');
-      setOpen(false);
-      router.refresh();
-    }
-  }, [state, router]);
+  // The dialog keeps its children mounted while closed, so the fields have to
+  // be cleared on success — otherwise the next "Add" would open pre-filled
+  // with the last thing that was saved. A rejected submission clears nothing.
+  const { state, pending, formProps } = useFormAction(action, {
+    resetOnSuccess: true,
+    onSuccess: useCallback(
+      (result: FormState) => {
+        toast.success(result.message ?? 'Saved.');
+        setOpen(false);
+        router.refresh();
+      },
+      [router],
+    ),
+    initialState,
+  });
 
   return (
     <>
@@ -62,7 +70,7 @@ export function FormModal({
       </Button>
 
       <Modal open={open} onClose={() => setOpen(false)} title={title} description={description} size={size}>
-        <form action={formAction} className="space-y-4">
+        <form {...formProps} className="space-y-4">
           <FormMessage state={state} />
           {children(state)}
 
@@ -70,7 +78,9 @@ export function FormModal({
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <SubmitButton pendingLabel="Saving…">{submitLabel}</SubmitButton>
+            <SubmitButton pending={pending} pendingLabel="Saving…">
+              {submitLabel}
+            </SubmitButton>
           </div>
         </form>
       </Modal>

@@ -1,12 +1,13 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, Mail, MapPin, Phone, UserCheck, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { reviewApplicationAction } from '@/lib/actions/members';
 import { Avatar, Badge, Card, CardBody, FormField, Select, Textarea } from '@/components/ui';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { formatDate } from '@/lib/utils';
 import type { FormState } from '@/lib/validation';
 
@@ -34,16 +35,20 @@ export interface ApplicationView {
  */
 export function ApplicationCard({ application }: { application: ApplicationView }) {
   const router = useRouter();
-  const [state, formAction] = useActionState(reviewApplicationAction, initialState);
+  // Review notes are kept if the decision is rejected by the server, so the
+  // administrator does not have to retype them.
+  const { state, pending, formProps } = useFormAction(reviewApplicationAction, {
+    resetOnSuccess: false,
+    initialState,
+    onSuccess: (result) => {
+      toast.success(result.message ?? 'Done');
+      router.refresh();
+    },
+  });
 
   useEffect(() => {
-    if (state.ok) {
-      toast.success(state.message ?? 'Done');
-      router.refresh();
-    } else if (state.message) {
-      toast.error(state.message);
-    }
-  }, [state, router]);
+    if (!state.ok && state.message) toast.error(state.message);
+  }, [state]);
 
   return (
     <Card>
@@ -111,7 +116,7 @@ export function ApplicationCard({ application }: { application: ApplicationView 
           </div>
         )}
 
-        <form action={formAction} className="space-y-3 border-t border-clay-200 pt-4">
+        <form {...formProps} className="space-y-3 border-t border-clay-200 pt-4">
           <input type="hidden" name="application_id" value={application.id} />
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -136,12 +141,13 @@ export function ApplicationCard({ application }: { application: ApplicationView 
           {/* The decision travels as the submit button's own name/value, so it is
               part of the same submission rather than a separate state update. */}
           <div className="flex flex-wrap gap-2">
-            <SubmitButton size="sm" name="decision" value="approved" pendingLabel="Saving…">
+            <SubmitButton pending={pending} size="sm" name="decision" value="approved" pendingLabel="Saving…">
               <Check className="h-4 w-4" aria-hidden />
               Approve
             </SubmitButton>
 
             <SubmitButton
+              pending={pending}
               variant="secondary"
               size="sm"
               name="decision"

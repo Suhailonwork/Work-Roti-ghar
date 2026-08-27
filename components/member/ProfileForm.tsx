@@ -1,10 +1,11 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { updateProfileAction } from '@/lib/actions/auth';
 import { Avatar, FormField, Input, Textarea } from '@/components/ui';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { FormMessage } from '@/components/auth/FormMessage';
 import type { FormState } from '@/lib/validation';
 
@@ -17,7 +18,10 @@ export function ProfileForm({
   profile: { full_name: string; bio: string | null; avatar_url: string | null };
   contact: { mobile: string | null; address: string | null };
 }) {
-  const [state, formAction] = useActionState(updateProfileAction, initialState);
+  const { state, pending, formProps } = useFormAction(updateProfileAction, {
+    resetOnSuccess: false,
+    initialState,
+  });
   const [preview, setPreview] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,7 +39,7 @@ export function ProfileForm({
   }
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form {...formProps} className="space-y-5">
       <FormMessage state={state} />
 
       <div className="flex flex-wrap items-center gap-4">
@@ -99,7 +103,7 @@ export function ProfileForm({
         </div>
       </div>
 
-      <SubmitButton pendingLabel="Saving…">Save changes</SubmitButton>
+      <SubmitButton pending={pending} pendingLabel="Saving…">Save changes</SubmitButton>
     </form>
   );
 }

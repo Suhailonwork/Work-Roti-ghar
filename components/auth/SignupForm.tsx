@@ -1,17 +1,21 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useState } from 'react';
 import { UserRound } from 'lucide-react';
 import { signUpAction } from '@/lib/actions/auth';
 import { FormField, Input, Textarea } from '@/components/ui';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { FormMessage } from './FormMessage';
 import type { FormState } from '@/lib/validation';
 
 const initialState: FormState = { ok: false };
 
 export function SignupForm() {
-  const [state, formAction] = useActionState(signUpAction, initialState);
+  const { state, pending, formProps } = useFormAction(signUpAction, {
+    resetOnSuccess: false,
+    initialState,
+  });
   const [preview, setPreview] = useState<string | null>(null);
 
   function onAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -28,7 +32,7 @@ export function SignupForm() {
   }
 
   return (
-    <form action={formAction} className="space-y-5" noValidate>
+    <form {...formProps} className="space-y-5" noValidate>
       <FormMessage state={state} />
 
       <div className="flex items-center gap-4">
@@ -138,7 +142,7 @@ export function SignupForm() {
         to see the community feed, member list or any family records.
       </p>
 
-      <SubmitButton className="w-full" size="lg" pendingLabel="Sending your application…">
+      <SubmitButton pending={pending} className="w-full" size="lg" pendingLabel="Sending your application…">
         Submit application
       </SubmitButton>
     </form>

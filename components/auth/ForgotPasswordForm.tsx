@@ -1,19 +1,22 @@
 'use client';
 
-import { useActionState } from 'react';
 import { forgotPasswordAction } from '@/lib/actions/auth';
 import { FormField, Input } from '@/components/ui';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { FormMessage } from './FormMessage';
 import type { FormState } from '@/lib/validation';
 
 const initialState: FormState = { ok: false };
 
 export function ForgotPasswordForm() {
-  const [state, formAction] = useActionState(forgotPasswordAction, initialState);
+  const { state, pending, formProps } = useFormAction(forgotPasswordAction, {
+    resetOnSuccess: false,
+    initialState,
+  });
 
   return (
-    <form action={formAction} className="space-y-4" noValidate>
+    <form {...formProps} className="space-y-4" noValidate>
       <FormMessage state={state} />
 
       {!state.ok && (
@@ -23,7 +26,7 @@ export function ForgotPasswordForm() {
       )}
 
       {!state.ok && (
-        <SubmitButton className="w-full" size="lg" pendingLabel="Sending…">
+        <SubmitButton pending={pending} className="w-full" size="lg" pendingLabel="Sending…">
           Send reset link
         </SubmitButton>
       )}

@@ -1,11 +1,12 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { AtSign, ImagePlus, Megaphone, X } from 'lucide-react';
 import { createPostAction, searchMembersAction } from '@/lib/actions/feed';
 import { Avatar, Textarea } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { FormMessage } from '@/components/auth/FormMessage';
 import { cn, formatBytes } from '@/lib/utils';
 import type { FormState } from '@/lib/validation';
@@ -35,7 +36,6 @@ export function PostComposer({
   canAnnounce: boolean;
   autoFocus?: boolean;
 }) {
-  const [state, formAction] = useActionState(createPostAction, initialState);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [mentions, setMentions] = useState<MemberOption[]>([]);
@@ -45,6 +45,19 @@ export function PostComposer({
   const [searching, startSearch] = useTransition();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // A rejected post keeps everything: the text, the chosen mentions and the
+  // attached files. Files matter most — a file input cannot be refilled from
+  // code, so a reset would silently drop them and the person would have to
+  // pick every one again. On success the whole composer is emptied instead.
+  const { state, pending, formProps } = useFormAction(createPostAction, {
+    resetOnSuccess: true,
+    initialState,
+    onSuccess: () => {
+      setFiles([]);
+      setMentions([]);
+    },
+  });
 
   useEffect(() => {
     const urls = files.map((file) => URL.createObjectURL(file));
@@ -88,7 +101,7 @@ export function PostComposer({
   }
 
   return (
-    <form action={formAction} className="rounded-2xl border border-clay-200 bg-cream-50 p-4 shadow-card sm:p-5">
+    <form {...formProps} className="rounded-2xl border border-clay-200 bg-cream-50 p-4 shadow-card sm:p-5">
       <FormMessage state={state} />
 
       <div className="flex gap-3">
@@ -235,7 +248,9 @@ export function PostComposer({
                   Announcement
                 </label>
               )}
-              <SubmitButton pendingLabel="Posting…">Post</SubmitButton>
+              <SubmitButton pending={pending} pendingLabel="Posting…">
+                Post
+              </SubmitButton>
             </div>
           </div>
 

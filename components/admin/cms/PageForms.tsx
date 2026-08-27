@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ExternalLink, History, RotateCcw, Save, Trash2 } from 'lucide-react';
@@ -16,6 +16,7 @@ import {
 import { FormField, Input, Select, Textarea } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { Modal } from '@/components/ui/Modal';
 import { FormMessage } from '@/components/auth/FormMessage';
 import { AddTrigger, FormModal } from '../FormModal';
@@ -89,15 +90,16 @@ function NewPageFields({ state }: { state: FormState }) {
 
 // ----------------------------------------------------------- page settings --
 export function PageSettingsForm({ page }: { page: CmsPage }) {
-  const [state, formAction] = useActionState(updatePageAction, initialState);
+  const { state, pending, formProps } = useFormAction(updatePageAction, {
+    resetOnSuccess: false,
+    initialState,
+    onSuccess: (result) => toast.success(result.message ?? 'Saved.'),
+  });
   const [status, setStatus] = useState(page.status);
 
-  useEffect(() => {
-    if (state.ok) toast.success(state.message ?? 'Saved.');
-  }, [state]);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form {...formProps} className="space-y-4">
       <FormMessage state={state} />
       <input type="hidden" name="id" value={page.id} />
 
@@ -165,7 +167,7 @@ export function PageSettingsForm({ page }: { page: CmsPage }) {
       </label>
 
       <div className="flex flex-wrap items-center gap-2 border-t border-clay-200 pt-4">
-        <SubmitButton pendingLabel="Saving…">
+        <SubmitButton pending={pending} pendingLabel="Saving…">
           <Save className="h-4 w-4" aria-hidden />
           Save page
         </SubmitButton>
@@ -256,16 +258,17 @@ function DeletePageButton({ id, title }: { id: string; title: string }) {
 
 // -------------------------------------------------------------------- SEO --
 export function SeoForm({ pageId, seo, pageTitle }: { pageId: string; seo: CmsSeo | null; pageTitle: string }) {
-  const [state, formAction] = useActionState(saveSeoAction, initialState);
+  const { state, pending, formProps } = useFormAction(saveSeoAction, {
+    resetOnSuccess: false,
+    initialState,
+    onSuccess: (result) => toast.success(result.message ?? 'Saved.'),
+  });
   const [title, setTitle] = useState(seo?.seo_title ?? pageTitle);
   const [description, setDescription] = useState(seo?.meta_description ?? '');
 
-  useEffect(() => {
-    if (state.ok) toast.success(state.message ?? 'Saved.');
-  }, [state]);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form {...formProps} className="space-y-5">
       <FormMessage state={state} />
       <input type="hidden" name="page_id" value={pageId} />
 
@@ -419,7 +422,7 @@ export function SeoForm({ pageId, seo, pageTitle }: { pageId: string; seo: CmsSe
       </label>
 
       <div className="border-t border-clay-200 pt-4">
-        <SubmitButton pendingLabel="Saving…">
+        <SubmitButton pending={pending} pendingLabel="Saving…">
           <Save className="h-4 w-4" aria-hidden />
           Save SEO settings
         </SubmitButton>

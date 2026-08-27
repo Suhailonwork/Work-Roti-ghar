@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, Copy, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import { deleteMediaAction, updateMediaAltAction, uploadMediaAction } from '@/li
 import { FormField, Input } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { Modal } from '@/components/ui/Modal';
 import { FormMessage } from '@/components/auth/FormMessage';
 import { formatBytes, formatDate } from '@/lib/utils';
@@ -28,15 +29,18 @@ export interface MediaRecord {
 export function UploadMediaButton() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [state, formAction] = useActionState(uploadMediaAction, initialState);
-
-  useEffect(() => {
-    if (state.ok) {
-      toast.success(state.message ?? 'Uploaded.');
+  // The dialog stays mounted while closed, so a successful upload clears the
+  // fields. A rejected one keeps the chosen file — which matters most here,
+  // since a file input cannot be refilled programmatically.
+  const { state, pending, formProps } = useFormAction(uploadMediaAction, {
+    resetOnSuccess: true,
+    initialState,
+    onSuccess: (result) => {
+      toast.success(result.message ?? 'Uploaded.');
       setOpen(false);
       router.refresh();
-    }
-  }, [state, router]);
+    },
+  });
 
   return (
     <>
@@ -51,7 +55,7 @@ export function UploadMediaButton() {
         title="Upload an image"
         description="Images here are public — they appear on the website."
       >
-        <form action={formAction} className="space-y-4">
+        <form {...formProps} className="space-y-4">
           <FormMessage state={state} />
 
           <FormField
@@ -88,7 +92,7 @@ export function UploadMediaButton() {
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <SubmitButton pendingLabel="Uploading…">Upload</SubmitButton>
+            <SubmitButton pending={pending} pendingLabel="Uploading…">Upload</SubmitButton>
           </div>
         </form>
       </Modal>

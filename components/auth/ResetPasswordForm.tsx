@@ -1,19 +1,22 @@
 'use client';
 
-import { useActionState } from 'react';
 import { resetPasswordAction } from '@/lib/actions/auth';
 import { FormField, Input } from '@/components/ui';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { FormMessage } from './FormMessage';
 import type { FormState } from '@/lib/validation';
 
 const initialState: FormState = { ok: false };
 
 export function ResetPasswordForm() {
-  const [state, formAction] = useActionState(resetPasswordAction, initialState);
+  const { state, pending, formProps } = useFormAction(resetPasswordAction, {
+    resetOnSuccess: false,
+    initialState,
+  });
 
   return (
-    <form action={formAction} className="space-y-4" noValidate>
+    <form {...formProps} className="space-y-4" noValidate>
       <FormMessage state={state} />
 
       <FormField
@@ -30,7 +33,7 @@ export function ResetPasswordForm() {
         <Input id="confirm_password" name="confirm_password" type="password" autoComplete="new-password" required />
       </FormField>
 
-      <SubmitButton className="w-full" size="lg" pendingLabel="Saving…">
+      <SubmitButton pending={pending} className="w-full" size="lg" pendingLabel="Saving…">
         Save new password
       </SubmitButton>
     </form>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -11,15 +11,22 @@ import {
 } from '@/lib/actions/settings';
 import { FormField, Input, Textarea } from '@/components/ui';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction, type FormAction } from '@/components/ui/useFormAction';
 import { FormMessage } from '@/components/auth/FormMessage';
 import type { FormState } from '@/lib/validation';
 
 const initialState: FormState = { ok: false };
 
-function useToastOnSave(state: FormState) {
-  useEffect(() => {
-    if (state.ok) toast.success(state.message ?? 'Saved.');
-  }, [state]);
+/**
+ * Settings forms are edit forms: the fields hold the values currently saved, so
+ * they are never cleared — not after a rejected save, and not after a good one.
+ */
+function useSettingsForm(action: FormAction) {
+  return useFormAction(action, {
+    resetOnSuccess: false,
+    initialState,
+    onSuccess: (result) => toast.success(result.message ?? 'Saved.'),
+  });
 }
 
 export function OrgSettingsForm({
@@ -27,11 +34,10 @@ export function OrgSettingsForm({
 }: {
   org: { name: string; tagline: string; email: string; phone: string; address: string; socials: Record<string, string> };
 }) {
-  const [state, formAction] = useActionState(saveOrgSettingsAction, initialState);
-  useToastOnSave(state);
+  const { state, pending, formProps } = useSettingsForm(saveOrgSettingsAction);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form {...formProps} className="space-y-4">
       <FormMessage state={state} />
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -75,7 +81,7 @@ export function OrgSettingsForm({
       </fieldset>
 
       <div className="border-t border-clay-200 pt-4">
-        <SubmitButton pendingLabel="Saving…">
+        <SubmitButton pending={pending} pendingLabel="Saving…">
           <Save className="h-4 w-4" aria-hidden />
           Save details
         </SubmitButton>
@@ -89,11 +95,10 @@ export function SeoDefaultsForm({
 }: {
   defaults: { site_name: string; title: string; description: string; og_image: string; twitter_site: string };
 }) {
-  const [state, formAction] = useActionState(saveSeoDefaultsAction, initialState);
-  useToastOnSave(state);
+  const { state, pending, formProps } = useSettingsForm(saveSeoDefaultsAction);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form {...formProps} className="space-y-4">
       <FormMessage state={state} />
 
       <p className="text-sm leading-relaxed text-clay-600">
@@ -128,7 +133,7 @@ export function SeoDefaultsForm({
       </FormField>
 
       <div className="border-t border-clay-200 pt-4">
-        <SubmitButton pendingLabel="Saving…">
+        <SubmitButton pending={pending} pendingLabel="Saving…">
           <Save className="h-4 w-4" aria-hidden />
           Save SEO defaults
         </SubmitButton>
@@ -142,12 +147,11 @@ export function SupportSettingsForm({
 }: {
   support: { policy_statement: string; public_payments_enabled: boolean; note: string };
 }) {
-  const [state, formAction] = useActionState(saveSupportSettingsAction, initialState);
+  const { state, pending, formProps } = useSettingsForm(saveSupportSettingsAction);
   const [enabled, setEnabled] = useState(support.public_payments_enabled);
-  useToastOnSave(state);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form {...formProps} className="space-y-4">
       <FormMessage state={state} />
 
       <FormField
@@ -201,7 +205,7 @@ export function SupportSettingsForm({
       </FormField>
 
       <div className="border-t border-clay-200 pt-4">
-        <SubmitButton pendingLabel="Saving…">
+        <SubmitButton pending={pending} pendingLabel="Saving…">
           <Save className="h-4 w-4" aria-hidden />
           Save support settings
         </SubmitButton>
@@ -215,11 +219,10 @@ export function PointsRulesForm({
 }: {
   rules: { distribution: number; verified_contribution: number; post: number; volunteer_day: number };
 }) {
-  const [state, formAction] = useActionState(savePointsRulesAction, initialState);
-  useToastOnSave(state);
+  const { state, pending, formProps } = useSettingsForm(savePointsRulesAction);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form {...formProps} className="space-y-4">
       <FormMessage state={state} />
 
       <p className="text-sm leading-relaxed text-clay-600">
@@ -275,7 +278,7 @@ export function PointsRulesForm({
       </div>
 
       <div className="border-t border-clay-200 pt-4">
-        <SubmitButton pendingLabel="Saving…">
+        <SubmitButton pending={pending} pendingLabel="Saving…">
           <Save className="h-4 w-4" aria-hidden />
           Save points rules
         </SubmitButton>

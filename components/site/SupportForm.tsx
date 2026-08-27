@@ -1,10 +1,11 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useState } from 'react';
 import { Box, Clock, HandHeart, MapPin, Truck, Wallet } from 'lucide-react';
 import { submitSupportPledgeAction } from '@/lib/actions/support';
 import { FormField, Input, Select, Textarea } from '@/components/ui';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { FormMessage } from '@/components/auth/FormMessage';
 import { cn } from '@/lib/utils';
 import type { FormState } from '@/lib/validation';
@@ -26,7 +27,10 @@ export function SupportForm({
   publicPaymentsEnabled: boolean;
   presetAmounts?: number[];
 }) {
-  const [state, formAction] = useActionState(submitSupportPledgeAction, initialState);
+  const { state, pending, formProps } = useFormAction(submitSupportPledgeAction, {
+    resetOnSuccess: false,
+    initialState,
+  });
   const [kind, setKind] = useState<string>('time');
   const [amount, setAmount] = useState('');
 
@@ -43,7 +47,7 @@ export function SupportForm({
   }
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form {...formProps} className="space-y-5">
       <FormMessage state={state} />
 
       <fieldset>
@@ -178,7 +182,7 @@ export function SupportForm({
         />
       </FormField>
 
-      <SubmitButton size="lg" className="w-full sm:w-auto" pendingLabel="Sending…">
+      <SubmitButton pending={pending} size="lg" className="w-full sm:w-auto" pendingLabel="Sending…">
         Send your offer
       </SubmitButton>
     </form>

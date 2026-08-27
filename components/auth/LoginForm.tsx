@@ -1,20 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { useActionState } from 'react';
 import { signInAction } from '@/lib/actions/auth';
 import { FormField, Input } from '@/components/ui';
 import { SubmitButton } from '@/components/ui/SubmitButton';
+import { useFormAction } from '@/components/ui/useFormAction';
 import { FormMessage } from './FormMessage';
 import type { FormState } from '@/lib/validation';
 
 const initialState: FormState = { ok: false };
 
 export function LoginForm({ next, registered }: { next?: string; registered?: boolean }) {
-  const [state, formAction] = useActionState(signInAction, initialState);
+  const { state, pending, formProps } = useFormAction(signInAction, {
+    resetOnSuccess: false,
+    initialState,
+  });
 
   return (
-    <form action={formAction} className="space-y-4" noValidate>
+    <form {...formProps} className="space-y-4" noValidate>
       {registered && !state.message && (
         <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
           Your application has been received. Sign in to check its progress.
@@ -46,7 +49,7 @@ export function LoginForm({ next, registered }: { next?: string; registered?: bo
         </Link>
       </div>
 
-      <SubmitButton className="w-full" size="lg" pendingLabel="Signing in…">
+      <SubmitButton pending={pending} className="w-full" size="lg" pendingLabel="Signing in…">
         Sign in
       </SubmitButton>
     </form>
