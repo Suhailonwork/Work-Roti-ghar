@@ -2,7 +2,7 @@
 
 import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   BadgeCheck,
   Banknote,
@@ -14,19 +14,21 @@ import {
   Globe,
   HandCoins,
   Image as ImageIcon,
+  LayoutDashboard,
   Menu,
   MessageSquare,
   Package,
   ScrollText,
   Settings,
-  ShieldAlert,
   Trophy,
   Truck,
   UserPlus,
+  UserRound,
   Users,
-  X,
 } from 'lucide-react';
 import { NavLinkIcon } from '@/components/ui/NavLinkIcon';
+import { Drawer } from '@/components/ui/Drawer';
+import { SignOutButton } from '@/components/auth/SignOutButton';
 import { cn } from '@/lib/utils';
 
 const SECTIONS: {
@@ -155,48 +157,77 @@ export function AdminSidebar({ badges }: { badges: AdminBadges }) {
   );
 }
 
+/**
+ * Destinations that live outside the admin area. On desktop these sit in the
+ * header and the sidebar footer; on a phone there is no room for them there,
+ * so the drawer carries them instead — otherwise an admin on a phone has no
+ * way back to the member app and no way to sign out.
+ */
+const MEMBER_LINKS: { href: string; label: string; icon: typeof Gauge }[] = [
+  { href: '/dashboard', label: 'Member dashboard', icon: LayoutDashboard },
+  { href: '/feed', label: 'Community feed', icon: MessageSquare },
+  { href: '/profile', label: 'Your profile', icon: UserRound },
+];
+
 export function AdminMobileNav({ badges }: { badges: AdminBadges }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const total = Object.values(badges).reduce((sum, n) => sum + (n ?? 0), 0);
+
+  // Close once the tapped route has landed.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
     <div className="lg:hidden">
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Open admin menu"
-        className="inline-flex items-center gap-2 rounded-xl border border-clay-200 bg-cream-50 px-3 py-2 text-sm font-medium text-clay-800 shadow-sm"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={total > 0 ? `Open admin menu, ${total} needing attention` : 'Open admin menu'}
+        className="relative inline-flex items-center gap-2 rounded-xl border border-clay-200 bg-cream-50 px-3 py-2 text-sm font-medium text-clay-800 shadow-sm"
       >
         <Menu className="h-4 w-4" aria-hidden />
         Sections
+        {total > 0 && (
+          <span
+            className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold text-white"
+            aria-hidden
+          >
+            {total > 9 ? '9+' : total}
+          </span>
+        )}
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex">
-          <button
-            type="button"
-            aria-label="Close menu"
-            className="flex-1 bg-clay-900/40 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
-          <div className="h-full w-72 overflow-y-auto border-l border-clay-200 bg-cream-50 p-4 shadow-lift">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="flex items-center gap-2 font-semibold text-clay-900">
-                <ShieldAlert className="h-4 w-4 text-brand-700" aria-hidden />
-                Admin
-              </p>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Close menu"
-                className="rounded-lg p-1.5 text-clay-500 hover:bg-clay-100"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <NavList badges={badges} onNavigate={() => setOpen(false)} />
-          </div>
+      <Drawer open={open} onClose={() => setOpen(false)} title="Admin sections" side="right">
+        <NavList badges={badges} onNavigate={() => setOpen(false)} />
+
+        <div className="mt-5 border-t border-clay-200 pt-4">
+          <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-clay-500">
+            Member area
+          </p>
+          <ul className="space-y-0.5">
+            {MEMBER_LINKS.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-clay-700 transition-colors hover:bg-clay-100 hover:text-clay-900"
+                >
+                  <NavLinkIcon icon={item.icon} size={17} className="shrink-0" />
+                  <span className="flex-1 truncate">{item.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
-      )}
+
+        <div className="mt-4 border-t border-clay-200 pt-3">
+          <SignOutButton className="px-3 py-2" />
+        </div>
+      </Drawer>
     </div>
   );
 }

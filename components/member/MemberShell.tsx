@@ -117,7 +117,18 @@ export async function MemberShell({
         </main>
       </div>
 
-      <MobileTabBar />
+      <MobileTabBar
+        role={user.profile.role}
+        counts={{
+          reminders: unreadReminders ?? 0,
+          notifications: unreadNotifications ?? 0,
+        }}
+        profile={{
+          full_name: user.profile.full_name,
+          avatar_url: user.profile.avatar_url,
+          points: user.profile.points,
+        }}
+      />
     </div>
   );
 }

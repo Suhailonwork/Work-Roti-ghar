@@ -139,4 +139,14 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* Drawers and sheets still appear instantly for anyone who has asked for
+     less motion — they just do not travel to get there. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-slide-up,
+    .animate-slide-in-right,
+    .animate-fade-scrim {
+      animation: none;
+    }
+  }
 }

@@ -117,10 +117,27 @@ const config: Config = {
         shimmer: {
           '100%': { transform: 'translateX(100%)' },
         },
+        // Overlay chrome: the scrim fades, the panel travels from the edge it
+        // is anchored to. Bottom sheets rise, side drawers slide in.
+        'fade-scrim': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'slide-up': {
+          from: { transform: 'translateY(100%)' },
+          to: { transform: 'translateY(0)' },
+        },
+        'slide-in-right': {
+          from: { transform: 'translateX(100%)' },
+          to: { transform: 'translateX(0)' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 0.24s ease-out both',
         shimmer: 'shimmer 1.6s infinite',
+        'fade-scrim': 'fade-scrim 0.2s ease-out both',
+        'slide-up': 'slide-up 0.26s cubic-bezier(0.32, 0.72, 0, 1) both',
+        'slide-in-right': 'slide-in-right 0.26s cubic-bezier(0.32, 0.72, 0, 1) both',
       },
     },
   },
