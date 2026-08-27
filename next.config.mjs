@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+console.log('🔥 NEXT CONFIG LOADED');
 const supabaseHost = (() => {
   try {
     return process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -19,6 +20,14 @@ const nextConfig = {
         : []),
       { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/**' },
     ],
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '12mb',
+    },
+    // middleware.ts matches /admin/*, and bodies passing through middleware are
+    // truncated at 10MB by default — which would cap uploads below the 12mb above.
+    middlewareClientMaxBodySize: '12mb',
   },
   async redirects() {
     return [
