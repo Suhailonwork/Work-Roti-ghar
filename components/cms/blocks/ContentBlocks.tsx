@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { cn, paragraphs } from '@/lib/utils';
 import { ButtonLink } from '@/components/ui/Button';
 import { list, link, safeHref, str, type BlockData } from '@/lib/cms/render';

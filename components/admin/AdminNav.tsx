@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -26,6 +26,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { NavLinkIcon } from '@/components/ui/NavLinkIcon';
 import { cn } from '@/lib/utils';
 
 const SECTIONS: {
@@ -123,7 +124,7 @@ function NavList({ badges, onNavigate }: { badges: AdminBadges; onNavigate?: () 
                         : 'text-clay-700 hover:bg-clay-100 hover:text-clay-900',
                     )}
                   >
-                    <Icon style={{ width: 17, height: 17 }} className="shrink-0" aria-hidden />
+                    <NavLinkIcon icon={Icon} size={17} className="shrink-0" />
                     <span className="flex-1 truncate">{item.label}</span>
                     {count > 0 && (
                       <span

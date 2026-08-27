@@ -4,8 +4,15 @@
 
 @layer base {
   :root {
-    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --font-serif: ui-serif, Georgia, 'Times New Roman', serif;
+    /* Prefers the best face actually installed rather than whatever the OS
+       calls its default: Inter where present, then each platform's modern UI
+       face, then the old fallbacks. No web font is downloaded. */
+    --font-sans: 'Inter', 'Inter var', -apple-system, BlinkMacSystemFont,
+      'Segoe UI Variable Text', 'Segoe UI', ui-sans-serif, system-ui, Roboto,
+      'Helvetica Neue', Arial, sans-serif;
+    /* An old-style serif for headings — warmer and less bookish than Times. */
+    --font-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua',
+      Georgia, ui-serif, serif;
   }
 
   * {
@@ -18,8 +25,33 @@
   }
 
   body {
-    @apply bg-cream-100 text-clay-900 antialiased;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    @apply bg-cream-100 text-clay-800 antialiased;
+    font-feature-settings: 'kern', 'liga', 'calt', 'cv02', 'cv03', 'cv04', 'cv11';
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Headings tighten as they grow; at display sizes default tracking reads
+     loose and slightly amateur. Applied here so no component has to remember. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-clay-900;
+    letter-spacing: theme('letterSpacing.heading');
+    text-wrap: balance;
+  }
+
+  /* Long-form paragraphs read better when the last line is not a single word. */
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Figures should never shift width as they change. */
+  th,
+  td,
+  time,
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 
   ::selection {
@@ -27,7 +59,30 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-cream-100;
+    @apply outline-none ring-2 ring-brand-600 ring-offset-2 ring-offset-cream-100;
+  }
+
+  /* Any link whose route is still loading. The marker is written by
+     PendingLink; `:has()` lets the effect land on the link itself, so nothing
+     needs a wrapper and no layout shifts. Buttons and nav icons show a real
+     spinner instead — this is for plain text links, cards and rows. */
+  a:has([data-link-pending]) {
+    cursor: progress;
+    animation: link-pending 900ms ease-in-out infinite;
+  }
+
+  @keyframes link-pending {
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  /* Someone who has asked for less motion still gets the state, just still. */
+  @media (prefers-reduced-motion: reduce) {
+    a:has([data-link-pending]) {
+      animation: none;
+      opacity: 0.55;
+    }
   }
 
   /* Arabic script needs a little more line height to breathe. */

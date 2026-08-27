@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { forwardRef } from 'react';
 import { Loader2 } from 'lucide-react';
+import { LinkSpinner } from './LinkSpinner';
 import { cn } from '@/lib/utils';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'subtle';
@@ -8,14 +9,17 @@ export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    'bg-brand-700 text-cream-50 hover:bg-brand-800 active:bg-brand-900 disabled:bg-brand-700/50 shadow-sm',
+    'bg-brand-700 text-cream-50 shadow-xs hover:bg-brand-800 hover:shadow-card ' +
+    'active:bg-brand-900 active:shadow-xs disabled:bg-brand-700/50 disabled:shadow-none',
   secondary:
-    'bg-cream-50 text-brand-800 border border-clay-200 hover:bg-cream-200 hover:border-clay-300 shadow-sm',
+    'bg-cream-50 text-brand-800 border border-clay-300 shadow-xs ' +
+    'hover:bg-clay-50 hover:border-clay-400/50 active:bg-clay-100',
   outline:
     'border border-brand-700 text-brand-800 hover:bg-brand-50 active:bg-brand-100',
-  ghost: 'text-clay-700 hover:bg-clay-100 hover:text-clay-900',
-  subtle: 'bg-clay-100 text-clay-800 hover:bg-clay-200',
-  danger: 'bg-red-700 text-white hover:bg-red-800 active:bg-red-900 shadow-sm',
+  ghost: 'text-clay-700 hover:bg-clay-100 hover:text-clay-900 active:bg-clay-200',
+  subtle: 'bg-clay-100 text-clay-800 hover:bg-clay-200 active:bg-clay-300/70',
+  danger:
+    'bg-red-700 text-white shadow-xs hover:bg-red-800 hover:shadow-card active:bg-red-900',
 };
 
 const SIZES: Record<ButtonSize, string> = {
@@ -26,8 +30,11 @@ const SIZES: Record<ButtonSize, string> = {
 };
 
 const BASE =
-  'inline-flex items-center justify-center rounded-xl font-medium transition-colors duration-150 ' +
-  'disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap';
+  'inline-flex items-center justify-center rounded-xl font-medium whitespace-nowrap ' +
+  // Shadow joins the transition so the hover lift arrives with the colour
+  // rather than a frame later.
+  'transition-[background-color,border-color,color,box-shadow] duration-150 ease-out ' +
+  'disabled:cursor-not-allowed disabled:opacity-60';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -57,11 +64,24 @@ export interface ButtonLinkProps extends React.ComponentPropsWithoutRef<typeof L
   size?: ButtonSize;
 }
 
+/**
+ * A link styled as a button.
+ *
+ * Navigation is work like any other, so it reports progress like any other: if
+ * the route has to be fetched, a spinner appears until it lands. Prefetched
+ * routes resolve immediately and show nothing, so quick links do not flicker.
+ */
 export function ButtonLink({
   className,
   variant = 'primary',
   size = 'md',
+  children,
   ...props
 }: ButtonLinkProps) {
-  return <Link className={cn(BASE, VARIANTS[variant], SIZES[size], className)} {...props} />;
+  return (
+    <Link className={cn(BASE, VARIANTS[variant], SIZES[size], className)} {...props}>
+      <LinkSpinner />
+      {children}
+    </Link>
+  );
 }

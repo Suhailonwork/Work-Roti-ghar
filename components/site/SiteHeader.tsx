@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { getCurrentUser } from '@/lib/auth';
 import { ButtonLink } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui';

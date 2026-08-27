@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { Mail, MapPin, Phone } from 'lucide-react';
 import { getOrgSettings, getSupportSettings } from '@/lib/cms/queries';
 

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';

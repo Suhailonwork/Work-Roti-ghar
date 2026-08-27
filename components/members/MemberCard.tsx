@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { Award, FileText } from 'lucide-react';
 import { Avatar, Badge } from '@/components/ui';
 import { formatDate, formatNumber } from '@/lib/utils';

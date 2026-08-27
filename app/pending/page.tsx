@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { redirect } from 'next/navigation';
 import { Ban, Clock, PauseCircle, XCircle } from 'lucide-react';
 import { requireUser } from '@/lib/auth';

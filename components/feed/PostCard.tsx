@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { Megaphone, Pin, Repeat2 } from 'lucide-react';
 import { Avatar, Badge } from '@/components/ui';
 import { cn, timeAgo } from '@/lib/utils';

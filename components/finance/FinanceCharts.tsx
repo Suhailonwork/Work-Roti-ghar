@@ -24,12 +24,21 @@ import type { CategoryTotal, MonthlyPoint } from '@/lib/finance/queries';
  */
 const RECEIVED = '#2a78d6';
 const SPENT = '#eb6834';
-/** Single-series bars cannot be confused with anything, so these stay on-brand. */
-const CATEGORY = '#2c6144';
+/**
+ * Single-series bars cannot be confused with anything, so this stays on-brand —
+ * but a step brighter than `brand-600`, which the palette validator flags as
+ * below the chroma floor (0.075 against a 0.1 minimum: as a large filled mark
+ * it reads grey rather than green). This is the nearest green in the same
+ * family that clears the floor and 3:1 on white.
+ */
+const CATEGORY = '#1f7a4d';
 
-const INK = '#5e5041';
-const INK_MUTED = '#8f7a68';
-const GRID = '#ded5ca';
+// Chart chrome, matched to the theme's text ramp. INK_MUTED was previously the
+// old clay-500, which sat at 3.8:1 — axis labels were part of the "too light"
+// problem, not an exception to it.
+const INK = '#3d342e';
+const INK_MUTED = '#5a4e43';
+const GRID = '#cec4b4';
 
 const CATEGORY_LABELS: Record<string, string> = {
   ration: 'Ration',

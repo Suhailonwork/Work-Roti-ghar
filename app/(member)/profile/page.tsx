@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { Award, ExternalLink, FileText, ShieldCheck } from 'lucide-react';
 import { requireApproved } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';

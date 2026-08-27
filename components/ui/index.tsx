@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { forwardRef, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { initials } from '@/lib/utils';
@@ -10,7 +10,7 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
   return (
     <div
       className={cn(
-        'rounded-2xl border border-clay-200 bg-cream-50 shadow-card',
+        'rounded-2xl border border-clay-200/80 bg-cream-50 shadow-card',
         className,
       )}
       {...props}
@@ -19,11 +19,11 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 }
 
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('border-b border-clay-200 px-5 py-4', className)} {...props} />;
+  return <div className={cn('border-b border-clay-200/70 px-5 py-4', className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={cn('text-base font-semibold text-clay-900', className)} {...props} />;
+  return <h2 className={cn('text-base font-semibold tracking-heading text-clay-900', className)} {...props} />;
 }
 
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
@@ -36,20 +36,23 @@ export function CardBody({ className, ...props }: React.HTMLAttributes<HTMLDivEl
 
 export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('flex items-center gap-2 border-t border-clay-200 px-5 py-3', className)} {...props} />
+    <div className={cn('flex items-center gap-2 border-t border-clay-200/70 px-5 py-3', className)} {...props} />
   );
 }
 
 // ------------------------------------------------------------------- Badge --
 export type BadgeTone = 'neutral' | 'green' | 'amber' | 'red' | 'blue' | 'purple';
 
+// Every pairing here is a dark 800-weight label on its own 50-weight tint,
+// which keeps each tone well clear of AA while staying quiet enough to sit
+// inside a table row without shouting.
 const BADGE_TONES: Record<BadgeTone, string> = {
-  neutral: 'bg-clay-100 text-clay-700 ring-clay-200',
-  green: 'bg-brand-50 text-brand-800 ring-brand-200',
-  amber: 'bg-amber-50 text-amber-800 ring-amber-200',
-  red: 'bg-red-50 text-red-800 ring-red-200',
-  blue: 'bg-sky-50 text-sky-800 ring-sky-200',
-  purple: 'bg-violet-50 text-violet-800 ring-violet-200',
+  neutral: 'bg-clay-100 text-clay-700 ring-clay-300/60',
+  green: 'bg-brand-50 text-brand-800 ring-brand-200/70',
+  amber: 'bg-amber-50 text-amber-900 ring-amber-300/60',
+  red: 'bg-red-50 text-red-800 ring-red-200/80',
+  blue: 'bg-sky-50 text-sky-900 ring-sky-200/80',
+  purple: 'bg-violet-50 text-violet-900 ring-violet-200/80',
 };
 
 export function Badge({
@@ -60,7 +63,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset',
+        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium tracking-label ring-1 ring-inset',
         BADGE_TONES[tone],
         className,
       )}
@@ -119,8 +122,8 @@ export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTML
       <input
         ref={ref}
         className={cn(
-          'h-11 w-full rounded-xl border border-clay-200 bg-white px-3.5 text-sm text-clay-900 shadow-sm',
-          'placeholder:text-clay-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25',
+          'h-11 w-full rounded-xl border border-clay-300 bg-white px-3.5 text-sm text-clay-900 shadow-xs',
+          'placeholder:text-clay-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20',
           'disabled:cursor-not-allowed disabled:bg-clay-50 disabled:text-clay-500',
           className,
         )}
@@ -137,8 +140,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttrib
         ref={ref}
         rows={rows}
         className={cn(
-          'w-full rounded-xl border border-clay-200 bg-white px-3.5 py-2.5 text-sm text-clay-900 shadow-sm',
-          'placeholder:text-clay-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25',
+          'w-full rounded-xl border border-clay-300 bg-white px-3.5 py-2.5 text-sm text-clay-900 shadow-xs',
+          'placeholder:text-clay-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20',
           'disabled:cursor-not-allowed disabled:bg-clay-50',
           className,
         )}
@@ -154,13 +157,13 @@ export const Select = forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<H
       <select
         ref={ref}
         className={cn(
-          'h-11 w-full appearance-none rounded-xl border border-clay-200 bg-white bg-[length:16px] bg-[right_0.75rem_center] bg-no-repeat px-3.5 pr-10 text-sm text-clay-900 shadow-sm',
-          'focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25',
+          'h-11 w-full appearance-none rounded-xl border border-clay-300 bg-white bg-[length:16px] bg-[right_0.75rem_center] bg-no-repeat px-3.5 pr-10 text-sm text-clay-900 shadow-xs',
+          'focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/20',
           className,
         )}
         style={{
           backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2375634f' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234a4038' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",
         }}
         {...props}
       />
@@ -325,13 +328,19 @@ export function StatCard({
           </span>
         )}
       </div>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-clay-900">{value}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-heading text-clay-900 [font-variant-numeric:tabular-nums]">
+        {value}
+      </p>
       {hint && <p className="mt-1 text-xs text-clay-500">{hint}</p>}
     </>
   );
 
-  const className =
-    'block rounded-2xl border border-clay-200 bg-cream-50 px-5 py-4 shadow-card transition-shadow hover:shadow-lift';
+  // Only the linked variant lifts on hover — a plain figure that animates
+  // under the cursor reads as clickable when it is not.
+  const className = cn(
+    'block rounded-2xl border border-clay-200/80 bg-cream-50 px-5 py-4 shadow-card',
+    href && 'transition-shadow duration-200 hover:shadow-lift',
+  );
 
   return href ? (
     <Link href={href} className={className}>

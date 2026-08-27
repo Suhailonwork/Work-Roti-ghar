@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { ArrowLeft } from 'lucide-react';
 import { requireApproved } from '@/lib/auth';
 import { PostComposer } from '@/components/feed/PostComposer';

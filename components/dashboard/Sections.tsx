@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { Crown, HandCoins, Package, Sparkles, Trophy, Users } from 'lucide-react';
 import { Avatar, Badge, Card, CardBody, CardHeader, CardTitle, EmptyState } from '@/components/ui';
 import { TableWrap, TBody, TD, TH, THead, TR } from '@/components/ui/Table';

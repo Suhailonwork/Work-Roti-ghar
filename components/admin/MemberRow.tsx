@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { changeMemberRoleAction, changeMemberStatusAction } from '@/lib/actions/members';

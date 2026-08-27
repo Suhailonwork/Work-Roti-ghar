@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { ExternalLink, History, RotateCcw, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {

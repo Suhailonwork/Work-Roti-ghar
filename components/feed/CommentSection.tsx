@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { useRouter } from 'next/navigation';
 import { Flag, Heart, MessageCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';

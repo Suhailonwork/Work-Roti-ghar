@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { Bell } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import type { SessionUser } from '@/lib/auth';

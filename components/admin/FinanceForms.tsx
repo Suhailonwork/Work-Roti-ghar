@@ -347,7 +347,7 @@ export function VerifyButtons({
           size="sm"
           variant="ghost"
           className="text-brand-700 hover:bg-brand-50"
-          disabled={pending}
+          loading={pending}
           onClick={() => set('verified')}
         >
           <Check className="h-3.5 w-3.5" aria-hidden />
@@ -358,7 +358,7 @@ export function VerifyButtons({
           size="sm"
           variant="ghost"
           className="text-red-700 hover:bg-red-50"
-          disabled={pending}
+          loading={pending}
           onClick={() => set('rejected')}
         >
           <X className="h-3.5 w-3.5" aria-hidden />
@@ -374,7 +374,7 @@ export function VerifyButtons({
         type="button"
         size="sm"
         variant="ghost"
-        disabled={pending}
+        loading={pending}
         onClick={() => set('pending')}
         title="Move back to pending"
       >

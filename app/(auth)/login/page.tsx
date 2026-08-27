@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { Suspense } from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { buildStaticMetadata } from '@/lib/seo';

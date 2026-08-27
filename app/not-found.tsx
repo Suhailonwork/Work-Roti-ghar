@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { ButtonLink } from '@/components/ui/Button';
 
 export default function NotFound() {

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { usePathname } from 'next/navigation';
 import {
   Bell,
@@ -13,6 +13,7 @@ import {
   Users,
   UserRound,
 } from 'lucide-react';
+import { NavLinkIcon } from '@/components/ui/NavLinkIcon';
 import { cn } from '@/lib/utils';
 import type { UserRole } from '@/types/database';
 
@@ -86,7 +87,7 @@ export function SidebarNav({ role, unread }: { role: UserRole; unread: number })
                 : 'text-clay-700 hover:bg-clay-100 hover:text-clay-900',
             )}
           >
-            <Icon className="h-4.5 w-4.5 shrink-0" style={{ width: 18, height: 18 }} aria-hidden />
+            <NavLinkIcon icon={Icon} size={18} className="shrink-0" />
             <span className="flex-1">{item.label}</span>
             {badge > 0 && (
               <span
@@ -129,10 +130,10 @@ export function MobileTabBar() {
                   active ? 'text-brand-800' : 'text-clay-500 hover:text-clay-800',
                 )}
               >
-                <Icon
+                <NavLinkIcon
+                  icon={Icon}
+                  size={isCreate ? 26 : 21}
                   className={cn(isCreate && 'text-brand-700')}
-                  style={{ width: isCreate ? 26 : 21, height: isCreate ? 26 : 21 }}
-                  aria-hidden
                 />
                 <span>{item.label}</span>
               </Link>

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { signInAction } from '@/lib/actions/auth';
 import { FormField, Input } from '@/components/ui';
 import { SubmitButton } from '@/components/ui/SubmitButton';

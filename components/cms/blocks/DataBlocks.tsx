@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { Lock, MessageSquare } from 'lucide-react';
 import { Avatar } from '@/components/ui';
 import { ButtonLink } from '@/components/ui/Button';

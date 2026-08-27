@@ -50,7 +50,7 @@ export function PostModeration({
           type="button"
           size="sm"
           variant="ghost"
-          disabled={pending}
+          loading={pending}
           onClick={() => run(pinPostAction(postId, !isPinned))}
           title={isPinned ? 'Unpin from the feed' : 'Pin to the top of the feed'}
         >
@@ -76,7 +76,7 @@ export function PostModeration({
             size="sm"
             variant="ghost"
             className="text-brand-700 hover:bg-brand-50"
-            disabled={pending}
+            loading={pending}
             onClick={() => run(setPostStatusAction(postId, 'published'))}
           >
             <Eye className="h-3.5 w-3.5" aria-hidden />
@@ -147,7 +147,7 @@ export function CommentModeration({ commentId, status }: { commentId: string; st
       size="sm"
       variant="ghost"
       className="text-red-700 hover:bg-red-50"
-      disabled={pending}
+      loading={pending}
       onClick={() => set('hidden')}
     >
       <EyeOff className="h-3.5 w-3.5" aria-hidden />
@@ -159,7 +159,7 @@ export function CommentModeration({ commentId, status }: { commentId: string; st
       size="sm"
       variant="ghost"
       className="text-brand-700 hover:bg-brand-50"
-      disabled={pending}
+      loading={pending}
       onClick={() => set('published')}
     >
       <Eye className="h-3.5 w-3.5" aria-hidden />
@@ -195,7 +195,7 @@ export function ReportControls({ reportId, status }: { reportId: string; status:
         type="button"
         size="sm"
         variant="ghost"
-        disabled={pending}
+        loading={pending}
         onClick={() =>
           startTransition(async () => {
             const result = await resolveReportAction(reportId, 'open');

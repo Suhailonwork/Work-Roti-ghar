@@ -2,13 +2,13 @@
   <defs>
     <clipPath id="c"><circle cx="64" cy="64" r="64"/></clipPath>
     <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3d7a57"/>
-      <stop offset="100%" stop-color="#3d7a57" stop-opacity="0.82"/>
+      <stop offset="0%" stop-color="#367a57"/>
+      <stop offset="100%" stop-color="#367a57" stop-opacity="0.82"/>
     </linearGradient>
   </defs>
   <g clip-path="url(#c)">
     <rect width="128" height="128" fill="url(#g)"/>
-    <circle cx="64" cy="50" r="21" fill="#f0f7f2"/>
-    <path d="M64 76c-21 0-38 14-38 32v20h76v-20c0-18-17-32-38-32z" fill="#f0f7f2"/>
+    <circle cx="64" cy="50" r="21" fill="#eff6f1"/>
+    <path d="M64 76c-21 0-38 14-38 32v20h76v-20c0-18-17-32-38-32z" fill="#eff6f1"/>
   </g>
 </svg>
