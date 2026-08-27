@@ -37,7 +37,9 @@ export default async function FinancePage() {
     getMonthlyFinance(6),
     getExpensesByCategory(),
     getPendingFinanceCounts(),
-    // Contributions are admin-only under RLS; a volunteer gets an empty list.
+    // The full contribution ledger, with pending and rejected paperwork, is
+    // admin-only under RLS; a volunteer gets an empty list here and reads the
+    // verified ledger on the dashboard instead.
     isAdmin ? getContributions({ page: 1, pageSize: 8 }) : Promise.resolve({ rows: [], total: 0 }),
     getExpenses({ page: 1, pageSize: 8 }),
   ]);
@@ -171,7 +173,7 @@ export default async function FinancePage() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-clay-900">
-            {isAdmin ? 'Recent expenses' : 'Expenses you submitted'}
+            {isAdmin ? 'Recent expenses' : 'Verified expenses'}
           </h2>
           {isAdmin && (
             <Link href="/admin/expenses" className="text-sm font-medium text-brand-700 hover:underline">
@@ -192,7 +194,7 @@ export default async function FinancePage() {
             {expenses.rows.length === 0 ? (
               <TableEmpty
                 colSpan={5}
-                message={isAdmin ? 'No expenses recorded yet.' : 'You have not submitted any expenses.'}
+                message={isAdmin ? 'No expenses recorded yet.' : 'No verified expenses yet.'}
               />
             ) : (
               expenses.rows.map((row) => (

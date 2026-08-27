@@ -17,8 +17,25 @@ import { formatCurrency } from '@/lib/utils';
 
 type ActionResult = { ok: boolean; message?: string };
 
-const VOLUNTEER = ['admin', 'volunteer'] as const;
 const ADMIN = ['admin'] as const;
+
+/**
+ * Fields that mark a record as verified.
+ *
+ * Only administrators can create finance records, so an entry an administrator
+ * has just typed in is already the checked version of itself — holding it at
+ * `pending` would mean the balance ignored money they had personally recorded
+ * until they clicked a second button. Verification remains a real state: any
+ * row can still be reopened or rejected afterwards from the ledger, and the
+ * balance follows it.
+ */
+function verifiedBy(userId: string) {
+  return {
+    verification_status: 'verified' as const,
+    verified_by: userId,
+    verified_at: new Date().toISOString(),
+  };
+}
 
 function failure(error: unknown): FormState {
   return { ok: false, message: error instanceof Error ? error.message : 'That did not work.' };
@@ -35,7 +52,7 @@ function failure(error: unknown): FormState {
 export async function saveContributionAction(_prev: FormState, formData: FormData): Promise<FormState> {
   let user;
   try {
-    user = await assertRole([...VOLUNTEER]);
+    user = await assertRole([...ADMIN]);
   } catch (error) {
     return failure(error);
   }
@@ -67,9 +84,31 @@ export async function saveContributionAction(_prev: FormState, formData: FormDat
     }
   }
 
+  // When a member is chosen the stored name comes from their profile, never
+  // from the form, so the ledger cannot end up crediting one member under
+  // another member's name.
+  let contributorName = values.contributor_name;
+
+  if (values.contributor_id) {
+    const { data: member } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', values.contributor_id)
+      .maybeSingle();
+
+    if (!member) {
+      return { ok: false, errors: { contributor_id: ['That member could not be found.'] } };
+    }
+    contributorName = member.full_name;
+  }
+
+  if (!contributorName) {
+    return { ok: false, errors: { contributor_name: ['Choose a member, or type a contributor name.'] } };
+  }
+
   const payload = {
     contributor_id: values.contributor_id ?? null,
-    contributor_name: values.contributor_name,
+    contributor_name: contributorName,
     amount: values.amount,
     contributed_on: values.contributed_on,
     payment_method: values.payment_method,
@@ -95,7 +134,7 @@ export async function saveContributionAction(_prev: FormState, formData: FormDat
       action: 'contribution.updated',
       entityType: 'contribution',
       entityId: id,
-      summary: `Updated a contribution of ${formatCurrency(values.amount)} from ${values.contributor_name}`,
+      summary: `Updated a contribution of ${formatCurrency(values.amount)} from ${contributorName}`,
       before: before ?? null,
       after: payload,
     });
@@ -104,8 +143,9 @@ export async function saveContributionAction(_prev: FormState, formData: FormDat
       .from('contributions')
       .insert({
         ...payload,
-        // Volunteers may only submit entries for review; RLS enforces this too.
-        verification_status: 'pending',
+        // Counts towards the balance straight away, and the trigger on this
+        // table credits the linked member's contribution points.
+        ...verifiedBy(user.id),
         created_by: user.id,
       })
       .select('id')
@@ -121,14 +161,15 @@ export async function saveContributionAction(_prev: FormState, formData: FormDat
       action: 'contribution.created',
       entityType: 'contribution',
       entityId: data.id,
-      summary: `Recorded ${formatCurrency(values.amount)} from ${values.contributor_name}`,
+      summary: `Recorded ${formatCurrency(values.amount)} from ${contributorName}`,
       after: payload,
     });
   }
 
   revalidatePath('/admin/contributions');
   revalidatePath('/finance');
-  return { ok: true, message: id ? 'Contribution updated.' : 'Contribution recorded and awaiting verification.' };
+  revalidatePath('/dashboard');
+  return { ok: true, message: id ? 'Contribution updated.' : 'Contribution recorded.' };
 }
 
 export async function verifyContributionAction(id: string, status: 'pending' | 'verified' | 'rejected'): Promise<ActionResult> {
@@ -169,6 +210,7 @@ export async function verifyContributionAction(id: string, status: 'pending' | '
   revalidatePath('/admin/contributions');
   revalidatePath('/admin');
   revalidatePath('/finance');
+  revalidatePath('/dashboard');
   return { ok: true, message: `Contribution marked ${parsed.data.status}.` };
 }
 
@@ -201,6 +243,7 @@ export async function deleteContributionAction(id: string): Promise<ActionResult
 
   revalidatePath('/admin/contributions');
   revalidatePath('/finance');
+  revalidatePath('/dashboard');
   return { ok: true, message: 'Contribution deleted.' };
 }
 
@@ -208,7 +251,7 @@ export async function deleteContributionAction(id: string): Promise<ActionResult
 export async function saveExpenseAction(_prev: FormState, formData: FormData): Promise<FormState> {
   let user;
   try {
-    user = await assertRole([...VOLUNTEER]);
+    user = await assertRole([...ADMIN]);
   } catch (error) {
     return failure(error);
   }
@@ -272,7 +315,7 @@ export async function saveExpenseAction(_prev: FormState, formData: FormData): P
   } else {
     const { data, error } = await supabase
       .from('expenses')
-      .insert({ ...payload, verification_status: 'pending', created_by: user.id })
+      .insert({ ...payload, ...verifiedBy(user.id), created_by: user.id })
       .select('id')
       .single();
 
@@ -293,7 +336,8 @@ export async function saveExpenseAction(_prev: FormState, formData: FormData): P
 
   revalidatePath('/admin/expenses');
   revalidatePath('/finance');
-  return { ok: true, message: id ? 'Expense updated.' : 'Expense recorded and awaiting verification.' };
+  revalidatePath('/dashboard');
+  return { ok: true, message: id ? 'Expense updated.' : 'Expense recorded.' };
 }
 
 export async function verifyExpenseAction(id: string, status: 'pending' | 'verified' | 'rejected'): Promise<ActionResult> {
@@ -334,6 +378,7 @@ export async function verifyExpenseAction(id: string, status: 'pending' | 'verif
   revalidatePath('/admin/expenses');
   revalidatePath('/admin');
   revalidatePath('/finance');
+  revalidatePath('/dashboard');
   return { ok: true, message: `Expense marked ${parsed.data.status}.` };
 }
 
@@ -366,6 +411,7 @@ export async function deleteExpenseAction(id: string): Promise<ActionResult> {
 
   revalidatePath('/admin/expenses');
   revalidatePath('/finance');
+  revalidatePath('/dashboard');
   return { ok: true, message: 'Expense deleted.' };
 }
 

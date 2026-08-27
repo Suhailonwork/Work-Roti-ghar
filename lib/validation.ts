@@ -157,17 +157,34 @@ export const distributionSchema = z.object({
 });
 
 // ----------------------------------------------------------------- finance --
-export const contributionSchema = z.object({
-  id: z.string().uuid().optional(),
-  contributor_id: z.string().uuid().optional().or(z.literal('')).transform((v) => v || undefined),
-  contributor_name: trimmed(2, 160),
-  amount: z.coerce.number().positive('Enter an amount above zero').max(100_000_000),
-  contributed_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Choose a date'),
-  payment_method: trimmed(2, 60),
-  transaction_ref: z.string().trim().max(120).optional().or(z.literal('')),
-  purpose: z.string().trim().max(300).optional().or(z.literal('')),
-  notes: z.string().trim().max(1000).optional().or(z.literal('')),
-});
+/**
+ * A contribution is normally attributed to a member picked from the directory,
+ * so `contributor_id` carries the link and the display name is read back from
+ * that member's profile. A typed name is required only for a contributor who
+ * has no member account — the refinement below enforces exactly one of the two.
+ */
+export const contributionSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    contributor_id: z.string().uuid().optional().or(z.literal('')).transform((v) => v || undefined),
+    contributor_name: z
+      .string()
+      .trim()
+      .max(160)
+      .optional()
+      .or(z.literal(''))
+      .transform((v) => v || undefined),
+    amount: z.coerce.number().positive('Enter an amount above zero').max(100_000_000),
+    contributed_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Choose a date'),
+    payment_method: trimmed(2, 60),
+    transaction_ref: z.string().trim().max(120).optional().or(z.literal('')),
+    purpose: z.string().trim().max(300).optional().or(z.literal('')),
+    notes: z.string().trim().max(1000).optional().or(z.literal('')),
+  })
+  .refine((value) => Boolean(value.contributor_id) || (value.contributor_name ?? '').length >= 2, {
+    message: 'Choose a member, or type the name of a contributor who is not a member.',
+    path: ['contributor_name'],
+  });
 
 export const expenseSchema = z.object({
   id: z.string().uuid().optional(),

@@ -192,3 +192,76 @@ export async function getPendingFinanceCounts(): Promise<{ contributions: number
 
   return { contributions: contributions ?? 0, expenses: expenses ?? 0 };
 }
+
+/**
+ * The shared contribution ledger shown to every approved member.
+ *
+ * Verified rows only — deliberately the same filter the balance uses, so the
+ * list a member reads and the total they see always agree. Unverified
+ * paperwork stays on the admin screens, which query `getContributions()`.
+ */
+export async function getContributionLedger({
+  from,
+  to,
+  page = 1,
+  pageSize = 10,
+}: {
+  from?: string | null;
+  to?: string | null;
+  page?: number;
+  pageSize?: number;
+}): Promise<{ rows: ContributionRow[]; total: number }> {
+  const supabase = await createClient();
+  const offset = (page - 1) * pageSize;
+
+  let query = supabase
+    .from('contributions')
+    .select(
+      'id, contributor_id, contributor_name, amount, contributed_on, payment_method, purpose, verification_status,' +
+        ' contributor:profiles!contributions_contributor_id_fkey(id, full_name, avatar_url)',
+      { count: 'exact' },
+    )
+    .eq('verification_status', 'verified');
+
+  if (from) query = query.gte('contributed_on', from);
+  if (to) query = query.lte('contributed_on', to);
+
+  const { data, count } = await query
+    .order('contributed_on', { ascending: false })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + pageSize - 1);
+
+  // The narrowed column list is not inferable while Relationships stay empty in
+  // the hand-written Database types, so the row shape is asserted here.
+  const rows = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) => ({
+    ...row,
+    contributor: Array.isArray(row.contributor)
+      ? ((row.contributor[0] as ContributionRow['contributor']) ?? null)
+      : ((row.contributor as ContributionRow['contributor']) ?? null),
+  })) as unknown as ContributionRow[];
+
+  return { rows, total: count ?? 0 };
+}
+
+export interface MemberContributionTotals {
+  total: number;
+  count: number;
+  lastOn: string | null;
+}
+
+/** What one member has contributed, counting verified records only. */
+export async function getMemberContributionTotals(profileId: string): Promise<MemberContributionTotals> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from('contributions')
+    .select('amount, contributed_on')
+    .eq('contributor_id', profileId)
+    .eq('verification_status', 'verified')
+    .order('contributed_on', { ascending: false });
+
+  const rows = data ?? [];
+  const total = rows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+
+  return { total, count: rows.length, lastOn: rows[0]?.contributed_on ?? null };
+}

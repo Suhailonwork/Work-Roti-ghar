@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, Pencil, Trash2, Undo2, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -61,29 +61,57 @@ function ContributionFields({
   members: MemberOption[];
   contribution?: Contribution;
 }) {
+  // '' means "not a member"; a new contribution opens on the first member in
+  // the directory so the common case is one click.
+  const [memberId, setMemberId] = useState(contribution?.contributor_id ?? members[0]?.id ?? '');
+
+  // The dropdown lists active members. If this contribution is linked to
+  // someone who has since been suspended or left, their option is added back
+  // so that opening the form does not quietly reassign the record.
+  const options =
+    contribution?.contributor_id && !members.some((member) => member.id === contribution.contributor_id)
+      ? [{ id: contribution.contributor_id, label: `${contribution.contributor_name} (inactive)` }, ...members]
+      : members;
+
   return (
     <>
       {contribution && <input type="hidden" name="id" value={contribution.id} />}
 
-      <FormField label="Contributor name" htmlFor="c-name" required errors={state.errors?.contributor_name}>
-        <Input id="c-name" name="contributor_name" defaultValue={contribution?.contributor_name} required maxLength={160} />
-      </FormField>
-
       <FormField
-        label="Link to a member"
+        label="Member"
         htmlFor="c-member"
-        help="Optional. Linking credits contribution points once verified."
+        required
+        help="The contribution is added to this member's total straight away."
         errors={state.errors?.contributor_id}
       >
-        <Select id="c-member" name="contributor_id" defaultValue={contribution?.contributor_id ?? ''}>
-          <option value="">Not linked</option>
-          {members.map((member) => (
+        <Select
+          id="c-member"
+          name="contributor_id"
+          value={memberId}
+          onChange={(event) => setMemberId(event.target.value)}
+        >
+          {options.map((member) => (
             <option key={member.id} value={member.id}>
               {member.label}
             </option>
           ))}
+          <option value="">Someone who is not a member…</option>
         </Select>
       </FormField>
+
+      {/* Only asked for when the contributor has no member account, so a
+          linked contribution always carries the name on the member's profile. */}
+      {memberId === '' && (
+        <FormField label="Contributor name" htmlFor="c-name" required errors={state.errors?.contributor_name}>
+          <Input
+            id="c-name"
+            name="contributor_name"
+            defaultValue={contribution?.contributor_name}
+            required
+            maxLength={160}
+          />
+        </FormField>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField label="Amount" htmlFor="c-amount" required errors={state.errors?.amount}>
@@ -149,7 +177,7 @@ export function NewContributionButton({ members }: { members: MemberOption[] }) 
     <FormModal
       action={saveContributionAction}
       title="Record a contribution"
-      description="New entries start as unverified and do not affect the balance until you verify them."
+      description="Recorded straight into the ledger: the member's total, the running total and the balance all update immediately."
       trigger={<AddTrigger label="Record contribution" />}
       submitLabel="Save"
       size="lg"
@@ -243,7 +271,7 @@ export function NewExpenseButton() {
     <FormModal
       action={saveExpenseAction}
       title="Record an expense"
-      description="New entries start as unverified and do not affect the balance until you verify them."
+      description="Recorded straight into the ledger: total expenses and the balance update immediately."
       trigger={<AddTrigger label="Record expense" />}
       submitLabel="Save"
     >

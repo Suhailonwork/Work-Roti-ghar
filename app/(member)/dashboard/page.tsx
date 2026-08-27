@@ -1,17 +1,38 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import {
+  ArrowDownLeft,
+  ArrowUpRight,
   Award,
   Bell,
+  HandCoins,
   MessageSquare,
   Package,
   PenSquare,
+  Scale,
   TrendingUp,
   Users,
 } from 'lucide-react';
 import { requireApproved } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { getImpactStats } from '@/lib/cms/queries';
+import { getLeaderboard, getMembers } from '@/lib/members/queries';
+import {
+  getContributionLedger,
+  getFinanceSummary,
+  getMemberContributionTotals,
+} from '@/lib/finance/queries';
+import { getDistributionsInRange, getRationSummaryInRange } from '@/lib/ration/queries';
+import { resolveRange } from '@/lib/ranges';
+import {
+  BeneficiaryList,
+  ContributionLedger,
+  MembersStrip,
+  TopMemberSection,
+  type Honouree,
+} from '@/components/dashboard/Sections';
+import { RangeFilter } from '@/components/ration/RangeFilter';
 import {
   Avatar,
   Badge,
@@ -20,11 +41,13 @@ import {
   CardHeader,
   CardTitle,
   EmptyState,
+  SectionHeading,
+  Skeleton,
   StatCard,
 } from '@/components/ui';
 import { ButtonLink } from '@/components/ui/Button';
 import { buildStaticMetadata } from '@/lib/seo';
-import { formatDate, formatNumber, timeAgo, truncate } from '@/lib/utils';
+import { formatCurrency, formatDate, formatNumber, timeAgo, truncate } from '@/lib/utils';
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildStaticMetadata({ title: 'Dashboard', path: '/dashboard', noIndex: true });
@@ -32,12 +55,43 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const PRIORITY_TONE = { urgent: 'red', high: 'amber', normal: 'green', low: 'neutral' } as const;
 
-export default async function DashboardPage() {
+const MEMBERS_ON_DASHBOARD = 12;
+const LEDGER_ROWS = 8;
+const BENEFICIARY_ROWS = 12;
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string; from?: string; to?: string }>;
+}) {
   const user = await requireApproved();
   const supabase = await createClient();
 
-  const [stats, postsResult, remindersResult, pointsResult, memberOfMonthResult] = await Promise.all([
+  // The beneficiary window comes from the URL and defaults to the last month.
+  const range = resolveRange(await searchParams);
+
+  const [
+    stats,
+    leaders,
+    directory,
+    financeSummary,
+    ledger,
+    myContributions,
+    rationSummary,
+    distributions,
+    postsResult,
+    remindersResult,
+    pointsResult,
+    memberOfMonthResult,
+  ] = await Promise.all([
     getImpactStats(),
+    getLeaderboard({ limit: 5 }),
+    getMembers({ page: 1, pageSize: MEMBERS_ON_DASHBOARD }),
+    getFinanceSummary(),
+    getContributionLedger({ page: 1, pageSize: LEDGER_ROWS }),
+    getMemberContributionTotals(user.id),
+    getRationSummaryInRange({ from: range.from, to: range.to }),
+    getDistributionsInRange({ from: range.from, to: range.to, page: 1, pageSize: BENEFICIARY_ROWS }),
     supabase
       .from('posts')
       .select(
@@ -73,17 +127,28 @@ export default async function DashboardPage() {
   const posts = postsResult.data ?? [];
   const reminders = remindersResult.data ?? [];
   const pointsLedger = pointsResult.data ?? [];
-  const memberOfMonth = memberOfMonthResult.data;
-  const honouree = memberOfMonth
-    ? ((Array.isArray(memberOfMonth.profile) ? memberOfMonth.profile[0] : memberOfMonth.profile) as
+
+  const memberOfMonthRow = memberOfMonthResult.data;
+  const honouredProfile = memberOfMonthRow
+    ? ((Array.isArray(memberOfMonthRow.profile) ? memberOfMonthRow.profile[0] : memberOfMonthRow.profile) as
         | { id: string; full_name: string; avatar_url: string | null }
         | undefined)
     : undefined;
 
+  const memberOfMonth: Honouree | null =
+    memberOfMonthRow && honouredProfile
+      ? {
+          year: memberOfMonthRow.year,
+          month: memberOfMonthRow.month,
+          citation: memberOfMonthRow.citation,
+          profile: honouredProfile,
+        }
+      : null;
+
   const firstName = user.profile.full_name.split(' ')[0];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* ------------------------------------------------------- greeting */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
@@ -149,7 +214,13 @@ export default async function DashboardPage() {
           <CardBody className="space-y-3">
             {reminders.map((row) => {
               const reminder = (Array.isArray(row.reminder) ? row.reminder[0] : row.reminder) as
-                | { id: string; title: string; body: string | null; due_at: string | null; priority: keyof typeof PRIORITY_TONE }
+                | {
+                    id: string;
+                    title: string;
+                    body: string | null;
+                    due_at: string | null;
+                    priority: keyof typeof PRIORITY_TONE;
+                  }
                 | undefined;
               if (!reminder) return null;
 
@@ -170,89 +241,198 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        {/* ------------------------------------------------ recent posts */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex items-center justify-between">
-            <CardTitle>From the community</CardTitle>
-            <Link href="/feed" className="text-sm font-medium text-brand-700 hover:underline">
-              Open feed
+      {/* -------------------------------------------------------- members */}
+      <section className="space-y-4">
+        <SectionHeading
+          title="Members"
+          description="Everyone who keeps Roti Ghar running."
+          action={
+            <ButtonLink href="/members" variant="secondary" size="sm">
+              All members
+            </ButtonLink>
+          }
+        />
+
+        <TopMemberSection leaders={leaders} memberOfMonth={memberOfMonth} />
+
+        <MembersStrip members={directory.members} />
+
+        {directory.total > directory.members.length && (
+          <p className="text-sm text-clay-600">
+            Showing {directory.members.length} of {formatNumber(directory.total)} members.{' '}
+            <Link href="/members" className="font-medium text-brand-700 hover:underline">
+              See the whole directory
             </Link>
-          </CardHeader>
-          <CardBody>
-            {posts.length === 0 ? (
-              <EmptyState
-                icon={<MessageSquare className="h-5 w-5" />}
-                title="No posts yet"
-                description="Be the first to share what happened on the last round."
-                action={<ButtonLink href="/feed/new" size="sm">Write a post</ButtonLink>}
-              />
-            ) : (
-              <ul className="divide-y divide-clay-200">
-                {posts.map((post) => {
-                  const author = (Array.isArray(post.author) ? post.author[0] : post.author) as
-                    | { id: string; full_name: string; avatar_url: string | null }
-                    | undefined;
+            .
+          </p>
+        )}
+      </section>
 
-                  return (
-                    <li key={post.id} className="py-3 first:pt-0 last:pb-0">
-                      <Link href={`/feed/${post.id}`} className="group flex gap-3">
-                        <Avatar src={author?.avatar_url} name={author?.full_name} size={36} />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-sm font-medium text-clay-900">
-                              {author?.full_name ?? 'A member'}
-                            </span>
-                            {post.is_announcement && <Badge tone="amber">Announcement</Badge>}
-                            <span className="text-xs text-clay-500">{timeAgo(post.created_at)}</span>
+      {/* --------------------------------------------------- contribution */}
+      <section className="space-y-4">
+        <SectionHeading
+          title="Contribution"
+          description="Verified contributions towards the running costs, newest first."
+        />
+
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
+          <StatCard
+            label="You have contributed"
+            value={formatCurrency(myContributions.total)}
+            hint={
+              myContributions.count === 0
+                ? 'No verified contributions yet'
+                : `${formatNumber(myContributions.count)} verified ${
+                    myContributions.count === 1 ? 'contribution' : 'contributions'
+                  }`
+            }
+            icon={<HandCoins className="h-4 w-4" />}
+            tone="green"
+          />
+          <StatCard
+            label="Your latest"
+            value={myContributions.lastOn ? formatDate(myContributions.lastOn) : '—'}
+            hint={myContributions.lastOn ? 'Most recent verified entry' : 'Nothing recorded yet'}
+            icon={<TrendingUp className="h-4 w-4" />}
+            tone="blue"
+          />
+          <StatCard
+            label="Contributed by everyone"
+            value={formatCurrency(financeSummary.total_received)}
+            hint={`${formatNumber(ledger.total)} verified ${ledger.total === 1 ? 'entry' : 'entries'}`}
+            icon={<Users className="h-4 w-4" />}
+            tone="amber"
+          />
+        </div>
+
+        <ContributionLedger rows={ledger.rows} highlightId={user.id} />
+      </section>
+
+      {/* -------------------------------------------------- beneficiaries */}
+      <section id="beneficiaries" className="scroll-mt-24 space-y-4">
+        <SectionHeading
+          title="Beneficiaries"
+          description="Families who received ration. Ration is not distributed on a fixed schedule, so every record carries the date it was actually handed over."
+          action={
+            <ButtonLink href="/ration" variant="secondary" size="sm">
+              About our kits
+            </ButtonLink>
+          }
+        />
+
+        <Suspense fallback={<Skeleton className="h-20 w-full rounded-2xl" />}>
+          <RangeFilter activeKey={range.key} from={range.from} to={range.to} anchorId="beneficiaries" />
+        </Suspense>
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <StatCard
+            label="Families helped"
+            value={formatNumber(rationSummary.families)}
+            hint={range.label}
+            icon={<Users className="h-4 w-4" />}
+            tone="green"
+          />
+          <StatCard
+            label="Kits delivered"
+            value={formatNumber(rationSummary.kits)}
+            hint={range.label}
+            icon={<Package className="h-4 w-4" />}
+            tone="blue"
+          />
+          <StatCard
+            label="Delivery rounds"
+            value={formatNumber(rationSummary.rounds)}
+            hint="Recorded hand-overs"
+            icon={<TrendingUp className="h-4 w-4" />}
+            tone="amber"
+          />
+          <StatCard
+            label="Areas reached"
+            value={formatNumber(rationSummary.areas)}
+            hint={range.label}
+            icon={<Package className="h-4 w-4" />}
+            tone="purple"
+          />
+        </div>
+
+        <BeneficiaryList rows={distributions.rows} rangeLabel={range.label} />
+
+        {distributions.total > distributions.rows.length && (
+          <p className="text-sm text-clay-600">
+            Showing the {distributions.rows.length} most recent of {formatNumber(distributions.total)} records
+            in this period.
+          </p>
+        )}
+      </section>
+
+      {/* ------------------------------------------------------ community */}
+      <section className="space-y-4">
+        <SectionHeading
+          title="Community"
+          description="What members have been sharing."
+          action={
+            <ButtonLink href="/feed" variant="secondary" size="sm">
+              Open feed
+            </ButtonLink>
+          }
+        />
+
+        <div className="grid gap-5 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
+            <CardHeader className="flex items-center justify-between">
+              <CardTitle>From the community</CardTitle>
+              <Link href="/feed" className="text-sm font-medium text-brand-700 hover:underline">
+                Open feed
+              </Link>
+            </CardHeader>
+            <CardBody>
+              {posts.length === 0 ? (
+                <EmptyState
+                  icon={<MessageSquare className="h-5 w-5" />}
+                  title="No posts yet"
+                  description="Be the first to share what happened on the last round."
+                  action={
+                    <ButtonLink href="/feed/new" size="sm">
+                      Write a post
+                    </ButtonLink>
+                  }
+                />
+              ) : (
+                <ul className="divide-y divide-clay-200">
+                  {posts.map((post) => {
+                    const author = (Array.isArray(post.author) ? post.author[0] : post.author) as
+                      | { id: string; full_name: string; avatar_url: string | null }
+                      | undefined;
+
+                    return (
+                      <li key={post.id} className="py-3 first:pt-0 last:pb-0">
+                        <Link href={`/feed/${post.id}`} className="group flex gap-3">
+                          <Avatar src={author?.avatar_url} name={author?.full_name} size={36} />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-sm font-medium text-clay-900">
+                                {author?.full_name ?? 'A member'}
+                              </span>
+                              {post.is_announcement && <Badge tone="amber">Announcement</Badge>}
+                              <span className="text-xs text-clay-500">{timeAgo(post.created_at)}</span>
+                            </div>
+                            <p className="mt-1 text-sm leading-relaxed text-clay-700 group-hover:text-clay-900">
+                              {truncate(post.content, 150)}
+                            </p>
+                            <p className="mt-1.5 text-xs text-clay-500">
+                              {post.like_count} likes · {post.comment_count} comments
+                            </p>
                           </div>
-                          <p className="mt-1 text-sm leading-relaxed text-clay-700 group-hover:text-clay-900">
-                            {truncate(post.content, 150)}
-                          </p>
-                          <p className="mt-1.5 text-xs text-clay-500">
-                            {post.like_count} likes · {post.comment_count} comments
-                          </p>
-                        </div>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardBody>
-        </Card>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardBody>
+          </Card>
 
-        <div className="space-y-5">
-          {/* ------------------------------------------ member of month */}
-          {honouree && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Award className="h-4 w-4 text-saffron-500" aria-hidden />
-                  Member of the month
-                </CardTitle>
-              </CardHeader>
-              <CardBody>
-                <Link href={`/members/${honouree.id}`} className="flex items-center gap-3">
-                  <Avatar src={honouree.avatar_url} name={honouree.full_name} size={44} />
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-clay-900">{honouree.full_name}</p>
-                    <p className="text-xs text-clay-500">
-                      {new Date(memberOfMonth!.year, memberOfMonth!.month - 1).toLocaleString('en-IN', {
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                </Link>
-                {memberOfMonth?.citation && (
-                  <p className="mt-3 text-sm leading-relaxed text-clay-600">{memberOfMonth.citation}</p>
-                )}
-              </CardBody>
-            </Card>
-          )}
-
-          {/* ------------------------------------------- points activity */}
+          {/* --------------------------------------- points activity */}
           <Card>
             <CardHeader className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
@@ -290,7 +470,46 @@ export default async function DashboardPage() {
             </CardBody>
           </Card>
         </div>
-      </div>
+      </section>
+
+      {/* ------------------------------------------------------- expenses */}
+      <section className="space-y-4">
+        <SectionHeading
+          title="Expenses"
+          description="Balance is verified contributions minus verified expenses. Nothing counts towards it until an administrator has checked the paperwork."
+          action={
+            user.profile.role === 'admin' || user.profile.role === 'volunteer' ? (
+              <ButtonLink href="/finance" variant="secondary" size="sm">
+                Full finance
+              </ButtonLink>
+            ) : undefined
+          }
+        />
+
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
+          <StatCard
+            label="Total contributions"
+            value={formatCurrency(financeSummary.total_received)}
+            hint="Verified contributions"
+            icon={<ArrowDownLeft className="h-4 w-4" />}
+            tone="green"
+          />
+          <StatCard
+            label="Total expenses"
+            value={formatCurrency(financeSummary.total_spent)}
+            hint="Verified expenses"
+            icon={<ArrowUpRight className="h-4 w-4" />}
+            tone="amber"
+          />
+          <StatCard
+            label="Balance"
+            value={formatCurrency(financeSummary.balance)}
+            hint="Contributions − expenses"
+            icon={<Scale className="h-4 w-4" />}
+            tone={financeSummary.balance >= 0 ? 'blue' : 'red'}
+          />
+        </div>
+      </section>
     </div>
   );
 }

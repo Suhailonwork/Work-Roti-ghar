@@ -61,6 +61,15 @@ In the Supabase SQL editor, run the files in `supabase/migrations/` **in order**
 | `0004_storage.sql` | Buckets and object policies |
 | `0005_seed.sql` | Site settings, the CMS homepage, a starter ration kit |
 | `0006_bootstrap_admin.sql` | Promotes your account to administrator — see below |
+| `0007_member_visibility.sql` | Opens the contribution ledger and ration records to members; makes every finance and distribution write admin-only |
+| `0008_demo_data.sql` | **Optional.** Sample members, families, distributions, contributions and expenses so every screen has something to show |
+| `0009_fix_contribution_points.sql` | Revokes a contribution's points when the contribution is deleted, and clears strays left by earlier deletions |
+
+`0008_demo_data.sql` is sample data, not part of the setup. Run it if you want the dashboard
+populated while you look around; skip it on a database that holds real records. The eight demo
+accounts cannot sign in — they have no identity row and an invalid password hash, so they exist
+only as names and faces in the directory. Remove everything it created by running
+`supabase/demo_data_teardown.sql`.
 
 ### 4. Create the first administrator
 
@@ -149,14 +158,21 @@ This is not stylistic. RLS can restrict rows but **not columns** — had those f
 the API, no matter what the interface showed. Splitting the table is the only way to make the rule
 real.
 
+The same limit applies to `beneficiaries`, which members can now read: `phone` and `address` are
+still columns on that table, so the safeguard is that every member-facing query lives in
+`lib/ration/queries.ts` and selects `name`, `area` and `family_size` only. Adding a `select('*')`
+against `beneficiaries` anywhere outside the admin screens would defeat it.
+
 ### What is protected
 
 | Data | Who can read it |
 |---|---|
-| Beneficiary records (names, phones, addresses) | Volunteers and admins only |
-| Distribution records | Volunteers and admins only |
-| Contributions & expenses | Admins; contributors see their own; volunteers see expenses they filed |
-| Receipts, distribution proofs, documents | Private buckets, admin/volunteer, short-lived signed URLs only |
+| Beneficiary names, areas, family sizes | Approved members — shown on the dashboard and `/ration` |
+| Beneficiary phones and addresses | Admins only — never selected by a member-facing query |
+| Distribution records | Approved members |
+| Verified contributions & expenses | Approved members — this is the ledger behind the balance |
+| Pending / rejected contributions & expenses | Admins; a contributor always sees their own |
+| Receipts, distribution proofs, documents | Private buckets, admins, short-lived signed URLs only |
 | Member post media | Private bucket, approved members, signed URLs only |
 | Phone / address / application notes | The owner and admins |
 | Audit logs | Admins — and append-only: no `UPDATE` or `DELETE` policy exists |
@@ -244,9 +260,11 @@ lib/
   supabase/          browser, server and service-role clients
   actions/           server actions, grouped by domain
   cms/               block catalogue, render helpers, queries
-  feed/ members/ finance/   query layers
+  feed/ members/ finance/ ration/   query layers
+  ranges.ts          shared date-range resolution for the beneficiary views
   auth.ts audit.ts storage.ts validation.ts seo.ts utils.ts env.ts
-supabase/migrations/ schema, functions, RLS, storage, seed, bootstrap
+supabase/migrations/ schema, functions, RLS, storage, seed, bootstrap, demo data
+supabase/demo_data_teardown.sql  removes the demo data again
 types/database.ts    hand-maintained database types
 ```
 

@@ -14,13 +14,11 @@ export default async function MediaPage() {
   await requireAdmin();
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-  .from('media')
-  .select('id, url, filename, alt_text, folder, size_bytes, created_at')
-  .order('created_at', { ascending: false })
-  .limit(200);
-
-console.error('MEDIA QUERY:', error);
+  const { data } = await supabase
+    .from('media')
+    .select('id, url, filename, alt_text, folder, size_bytes, created_at')
+    .order('created_at', { ascending: false })
+    .limit(200);
 
   const items = (data ?? []) as MediaRecord[];
 

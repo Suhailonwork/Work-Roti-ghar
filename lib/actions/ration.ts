@@ -15,7 +15,6 @@ import {
 
 type ActionResult = { ok: boolean; message?: string };
 
-const VOLUNTEER = ['admin', 'volunteer'] as const;
 const ADMIN = ['admin'] as const;
 
 function failure(error: unknown): FormState {
@@ -26,7 +25,7 @@ function failure(error: unknown): FormState {
 export async function saveBeneficiaryAction(_prev: FormState, formData: FormData): Promise<FormState> {
   let user;
   try {
-    user = await assertRole([...VOLUNTEER]);
+    user = await assertRole([...ADMIN]);
   } catch (error) {
     return failure(error);
   }
@@ -253,7 +252,7 @@ export async function deleteRationKitAction(id: string): Promise<ActionResult> {
 export async function saveDistributionAction(_prev: FormState, formData: FormData): Promise<FormState> {
   let user;
   try {
-    user = await assertRole([...VOLUNTEER]);
+    user = await assertRole([...ADMIN]);
   } catch (error) {
     return failure(error);
   }
@@ -372,5 +371,6 @@ export async function deleteDistributionAction(id: string): Promise<ActionResult
 
   revalidatePath('/admin/distributions');
   revalidatePath('/ration');
+  revalidatePath('/dashboard');
   return { ok: true, message: 'Distribution deleted.' };
 }
