@@ -178,7 +178,9 @@ export const getSeoDefaults = cache(async (): Promise<SeoDefaults> => {
     site_name: value?.site_name || 'Roti Ghar',
     title: value?.title || 'Roti Ghar',
     description: value?.description || '',
-    og_image: value?.og_image || '/images/og-default.svg',
+    // /og-image is a generated PNG. Social scrapers reject SVG, so an SVG
+    // fallback here would mean no preview card at all.
+    og_image: value?.og_image || '/og-image',
     twitter_site: value?.twitter_site || '',
   };
 });

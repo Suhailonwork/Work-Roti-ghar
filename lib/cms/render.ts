@@ -1,4 +1,4 @@
-import type { Json } from '@/types/database';
+import type { CmsPageBlock, Json } from '@/types/database';
 
 /**
  * Block data is JSONB, so every read has to survive a missing or wrong-typed
@@ -30,6 +30,42 @@ export function list(data: BlockData, key: string): BlockData[] {
   const value = data?.[key];
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is BlockData => typeof item === 'object' && item !== null && !Array.isArray(item));
+}
+
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+/**
+ * Pulls the question/answer pairs out of the visible `faq` blocks on a page.
+ *
+ * FAQPage structured data is only valid when the same text is visible to the
+ * reader, so the JSON-LD is generated from the rendered blocks rather than
+ * kept in a parallel list that an editor could silently put out of date.
+ * Hidden blocks are skipped for the same reason — their answers are not on
+ * the page, so they must not appear in the markup either.
+ */
+export function faqItemsFromBlocks(blocks: CmsPageBlock[]): FaqItem[] {
+  const items: FaqItem[] = [];
+  const seen = new Set<string>();
+
+  for (const block of blocks) {
+    if (block.block_type !== 'faq' || !block.is_visible) continue;
+
+    for (const row of list((block.data ?? {}) as BlockData, 'items')) {
+      const question = str(row, 'question').trim();
+      // Paragraph breaks carry no meaning in a JSON-LD string value.
+      const answer = str(row, 'answer').replace(/\s+/g, ' ').trim();
+      const key = question.toLowerCase();
+      if (!question || !answer || seen.has(key)) continue;
+      seen.add(key);
+      items.push({ question, answer });
+    }
+  }
+
+  return items;
 }
 
 export interface CtaLink {

@@ -1,3 +1,14 @@
+import type { Metadata } from 'next';
+
+/**
+ * Private area. robots.txt already disallows these paths, but a crawler that
+ * reaches one anyway (a shared link, a stray backlink) must not index it —
+ * member pages in the index would only dilute the Workrotighar brand results.
+ */
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true },
+};
+
 import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { requireAdmin } from '@/lib/auth';

@@ -1,3 +1,11 @@
+import type { Metadata } from 'next';
+
+/** A 404 must never be indexed, but its links back into the site still count. */
+export const metadata: Metadata = {
+  title: 'Page not found',
+  robots: { index: false, follow: true },
+};
+
 import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { ButtonLink } from '@/components/ui/Button';
 

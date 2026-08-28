@@ -5,10 +5,11 @@ import { buildStaticMetadata } from '@/lib/seo';
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildStaticMetadata({
-    title: 'Apply to join',
+    title: 'Apply to join the Roti Ghar work',
     description:
-      'Apply to become a Roti Ghar member or volunteer. Applications are reviewed by an administrator.',
+      'Apply to become a Roti Ghar volunteer or member on Workrotighar. Every application is reviewed by an administrator before you join the packing and delivery work.',
     path: '/signup',
+    keywords: ['join roti ghar', 'roti ghar volunteer', 'rotighar membership', 'volunteer work'],
   });
 }
 

@@ -64,6 +64,8 @@ In the Supabase SQL editor, run the files in `supabase/migrations/` **in order**
 | `0007_member_visibility.sql` | Opens the contribution ledger and ration records to members; makes every finance and distribution write admin-only |
 | `0008_demo_data.sql` | **Optional.** Sample members, families, distributions, contributions and expenses so every screen has something to show |
 | `0009_fix_contribution_points.sql` | Revokes a contribution's points when the contribution is deleted, and clears strays left by earlier deletions |
+| `0010_seo_workrotighar.sql` | On-page SEO for the `workrotighar` brand: site-wide SEO defaults, homepage meta/Open Graph/Twitter tags, and ~600 words of indexable homepage copy. Safe to re-run |
+| `0011_faq_section.sql` | Homepage FAQ section (11 questions). The page emits FAQPage JSON-LD from these rows, so the markup always matches the visible answers. Run after `0010`. Safe to re-run |
 
 `0008_demo_data.sql` is sample data, not part of the setup. Run it if you want the dashboard
 populated while you look around; skip it on a database that holds real records. The eight demo

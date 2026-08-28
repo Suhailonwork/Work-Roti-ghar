@@ -1,7 +1,8 @@
 import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { cn, paragraphs } from '@/lib/utils';
 import { ButtonLink } from '@/components/ui/Button';
-import { list, link, safeHref, str, type BlockData } from '@/lib/cms/render';
+import { ChevronDown } from 'lucide-react';
+import { bool, list, link, safeHref, str, type BlockData } from '@/lib/cms/render';
 
 /**
  * Presentational blocks for the public site.
@@ -427,6 +428,52 @@ export function CtaBlock({ data }: { data: BlockData }) {
                 </Link>
               );
             })()}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// --------------------------------------------------------------------- faq --
+/**
+ * An accordion of questions and answers.
+ *
+ * Built on <details>/<summary> so it works with JavaScript disabled and every
+ * answer ships inside the initial HTML. That matters for more than
+ * accessibility: Google only grants FAQ rich results when the answer text is
+ * actually present on the page, and it will not run an accordion to find it.
+ * The matching FAQPage JSON-LD is emitted by the page, read back out of these
+ * same blocks by `faqItemsFromBlocks`, so the markup can never drift from the
+ * copy a visitor reads.
+ */
+export function FaqBlock({ data }: { data: BlockData }) {
+  const anchorId = str(data, 'id', 'faq');
+  const title = str(data, 'title');
+  const subtitle = str(data, 'subtitle');
+  const openFirst = bool(data, 'open_first', true);
+  const items = list(data, 'items').filter((item) => str(item, 'question') && str(item, 'answer'));
+
+  if (!items.length) return null;
+
+  return (
+    <section id={anchorId || undefined} className="scroll-mt-24 py-12 sm:py-16">
+      <div className="container-narrow">
+        <SectionTitle title={title} subtitle={subtitle} />
+        <div className="divide-y divide-clay-200 overflow-hidden rounded-2xl border border-clay-200 bg-cream-50 shadow-card">
+          {items.map((item, i) => (
+            <details key={i} className="group" open={openFirst && i === 0}>
+              <summary className="flex cursor-pointer list-none items-start justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-cream-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 [&::-webkit-details-marker]:hidden">
+                <h3 className="font-serif text-base font-semibold text-brand-900 sm:text-lg">
+                  {str(item, 'question')}
+                </h3>
+                <ChevronDown
+                  aria-hidden
+                  className="mt-0.5 h-5 w-5 shrink-0 text-brand-700 transition-transform duration-200 group-open:rotate-180"
+                />
+              </summary>
+              <Prose body={str(item, 'answer')} className="px-5 pb-5 pt-0" />
+            </details>
+          ))}
         </div>
       </div>
     </section>

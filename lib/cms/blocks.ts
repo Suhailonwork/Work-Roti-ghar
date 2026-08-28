@@ -315,6 +315,39 @@ export const BLOCK_DEFS: BlockDef[] = [
     defaults: { title: 'From the community', subtitle: '', limit: 3 },
   },
   {
+    type: 'faq',
+    label: 'FAQ',
+    description:
+      'Questions and answers in an accordion. Emits FAQPage structured data automatically, so the answers can win a rich result on brand searches.',
+    icon: 'circle-help',
+    fields: [
+      { name: 'id', label: 'Anchor id', type: 'text', help: 'Lets you link to this section with #your-id.' },
+      { name: 'title', label: 'Heading', type: 'text' },
+      { name: 'subtitle', label: 'Sub-heading', type: 'text' },
+      {
+        name: 'items',
+        label: 'Questions',
+        type: 'repeater',
+        itemLabel: 'question',
+        fields: [
+          { name: 'question', label: 'Question', type: 'text' },
+          {
+            name: 'answer',
+            label: 'Answer',
+            type: 'textarea',
+            help: 'Answer the question fully in the first sentence — that is the part Google shows.',
+          },
+        ],
+      },
+      {
+        name: 'open_first',
+        label: 'Open the first question by default',
+        type: 'boolean',
+      },
+    ],
+    defaults: { id: 'faq', title: 'Frequently asked questions', subtitle: '', items: [], open_first: true },
+  },
+  {
     type: 'custom',
     label: 'Custom content',
     description: 'A free-form section with its own background and width.',

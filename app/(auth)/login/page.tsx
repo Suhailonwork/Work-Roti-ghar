@@ -7,9 +7,10 @@ import { safeRedirect } from '@/lib/utils';
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildStaticMetadata({
-    title: 'Sign in',
-    description: 'Sign in to the Roti Ghar members area.',
+    title: 'Member sign in',
+    description: 'Sign in to the Roti Ghar members area on Workrotighar to see distributions, ration records and the community feed.',
     path: '/login',
+    keywords: ['roti ghar login', 'workrotighar login', 'rotighar member sign in'],
   });
 }
 

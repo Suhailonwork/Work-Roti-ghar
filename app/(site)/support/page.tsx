@@ -2,14 +2,15 @@ import type { Metadata } from 'next';
 import { HandHeart, Info, ShieldCheck } from 'lucide-react';
 import { SupportForm } from '@/components/site/SupportForm';
 import { getOrgSettings, getSupportSettings } from '@/lib/cms/queries';
-import { buildStaticMetadata } from '@/lib/seo';
+import { breadcrumbJsonLd, buildStaticMetadata } from '@/lib/seo';
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildStaticMetadata({
-    title: 'Support our work',
+    title: 'Support the work of Roti Ghar',
     description:
-      'Roti Ghar runs on volunteers and members rather than public donations. Here is what actually helps.',
+      'Roti Ghar runs on volunteers and members rather than public donations. Here is what actually helps the work — a morning, a sack of rice, transport, storage or a referral.',
     path: '/support',
+    keywords: ['support roti ghar', 'volunteer with roti ghar', 'help rotighar', 'donate in kind'],
   });
 }
 
@@ -18,6 +19,12 @@ export default async function SupportPage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd([{ name: 'Support', path: '/support' }])),
+        }}
+      />
       <section className="bg-gradient-to-b from-cream-200 to-cream-100 py-14 sm:py-18">
         <div className="container-narrow text-center">
           <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-800 text-cream-50">

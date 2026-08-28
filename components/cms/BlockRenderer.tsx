@@ -4,6 +4,7 @@ import {
   CardsBlock,
   CtaBlock,
   CustomBlock,
+  FaqBlock,
   GalleryBlock,
   HadithBlock,
   HeroBlock,
@@ -41,6 +42,8 @@ function Block({ block, stats }: { block: CmsPageBlock; stats: ImpactStats }) {
       return <GalleryBlock data={data} />;
     case 'video':
       return <VideoBlock data={data} embed={embedUrl(str(data, 'url'))} />;
+    case 'faq':
+      return <FaqBlock data={data} />;
     case 'cta':
       return <CtaBlock data={data} />;
     case 'community_posts':

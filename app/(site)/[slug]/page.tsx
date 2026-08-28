@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { BlockRenderer } from '@/components/cms/BlockRenderer';
 import { getImpactStats, getPageBySlug } from '@/lib/cms/queries';
-import { buildPageMetadata } from '@/lib/seo';
+import { faqItemsFromBlocks } from '@/lib/cms/render';
+import { breadcrumbJsonLd, buildPageMetadata, faqJsonLd } from '@/lib/seo';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -21,5 +22,20 @@ export default async function CmsPage({ params }: PageProps) {
 
   if (!result) notFound();
 
-  return <BlockRenderer blocks={result.blocks} stats={stats} />;
+  // Breadcrumbs always; an FAQPage node only when the page really shows one.
+  const faqs = faqItemsFromBlocks(result.blocks);
+  const jsonLd = [
+    breadcrumbJsonLd([{ name: result.page.title, path: `/${result.page.slug}` }]),
+    ...(faqs.length ? [faqJsonLd(faqs)] : []),
+  ];
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <BlockRenderer blocks={result.blocks} stats={stats} />
+    </>
+  );
 }
