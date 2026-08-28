@@ -96,6 +96,48 @@ export function safeHref(href: string): string | null {
   return null;
 }
 
+
+export interface TextSegment {
+  text: string;
+  href?: string;
+  external?: boolean;
+}
+
+/**
+ * Splits body copy into plain text and `[label](destination)` links.
+ *
+ * CMS body fields are plain text, which left no way to put a link inside a
+ * sentence — the one placement that reads naturally and that search engines
+ * treat as a genuine editorial reference. This adds the smallest syntax that
+ * does the job.
+ *
+ * Destinations go through `safeHref`, so `javascript:` and friends never
+ * become links; anything it rejects is left on the page as the literal text
+ * the editor typed, which makes a mistake visible rather than silent.
+ */
+export function parseInlineLinks(text: string): TextSegment[] {
+  const pattern = /\[([^\]]+)\]\(([^\s)]+)\)/g;
+  const segments: TextSegment[] = [];
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    const [whole, label, destination] = match;
+    if (match.index > cursor) segments.push({ text: text.slice(cursor, match.index) });
+
+    const href = safeHref(destination);
+    if (href) {
+      segments.push({ text: label, href, external: /^https?:/i.test(href) });
+    } else {
+      segments.push({ text: whole });
+    }
+    cursor = match.index + whole.length;
+  }
+
+  if (cursor < text.length) segments.push({ text: text.slice(cursor) });
+  return segments;
+}
+
 /** Turns a YouTube or Vimeo watch URL into its embeddable form. */
 export function embedUrl(raw: string): { kind: 'iframe' | 'video'; src: string } | null {
   const url = raw.trim();

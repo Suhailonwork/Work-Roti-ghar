@@ -11,6 +11,7 @@ import {
   ImageBlock,
   ImageTextBlock,
   RichTextBlock,
+  SocialEmbedBlock,
   VideoBlock,
 } from './blocks/ContentBlocks';
 import { CommunityPostsBlock, ContactDetailsBlock, StatisticsBlock } from './blocks/DataBlocks';
@@ -50,6 +51,8 @@ function Block({ block, stats }: { block: CmsPageBlock; stats: ImpactStats }) {
       return <CommunityPostsBlock data={data} />;
     case 'contact_details':
       return <ContactDetailsBlock data={data} />;
+    case 'social_embed':
+      return <SocialEmbedBlock data={data} />;
     case 'custom':
       return <CustomBlock data={data} />;
     default:

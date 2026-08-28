@@ -369,6 +369,34 @@ export const BLOCK_DEFS: BlockDef[] = [
     },
   },
   {
+    type: 'social_embed',
+    label: 'Facebook post',
+    description:
+      'Embeds one post from our Facebook page under a heading — good for an "Our work" or "Community updates" section. The post only loads when a reader clicks it, so it costs the page nothing.',
+    icon: 'facebook',
+    fields: [
+      { name: 'id', label: 'Anchor id', type: 'text', help: 'Lets you link to this section with #your-id.' },
+      { name: 'title', label: 'Heading', type: 'text' },
+      { name: 'subtitle', label: 'Sub-heading', type: 'text' },
+      {
+        name: 'body',
+        label: 'Intro copy',
+        type: 'richtext',
+        help: 'Optional paragraphs above the post. Use [label](https://example.com) to add a link.',
+      },
+      {
+        name: 'url',
+        label: 'Facebook post URL',
+        type: 'text',
+        required: true,
+        placeholder: 'https://www.facebook.com/permalink.php?story_fbid=...',
+        help: 'The permalink to a single post. Only facebook.com links are accepted.',
+      },
+      { name: 'caption', label: 'Caption', type: 'text', help: 'Shown on the placeholder before the post is loaded.' },
+    ],
+    defaults: { id: '', title: 'Our work', subtitle: '', body: '', url: '', caption: '' },
+  },
+  {
     type: 'custom',
     label: 'Custom content',
     description: 'A free-form section with its own background and width.',

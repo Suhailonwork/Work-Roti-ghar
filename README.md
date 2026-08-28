@@ -67,6 +67,7 @@ In the Supabase SQL editor, run the files in `supabase/migrations/` **in order**
 | `0010_seo_workrotighar.sql` | On-page SEO for the `workrotighar` brand: site-wide SEO defaults, homepage meta/Open Graph/Twitter tags, and ~600 words of indexable homepage copy. Safe to re-run |
 | `0011_faq_section.sql` | Homepage FAQ section (11 questions). The page emits FAQPage JSON-LD from these rows, so the markup always matches the visible answers. Run after `0010`. Safe to re-run |
 | `0012_legal_and_contact_pages.sql` | Creates `/contact`, `/privacy-policy` and `/terms-and-conditions` as CMS pages with full SEO, and links all four secondary pages from the homepage. Run after `0011`. Safe to re-run |
+| `0013_external_reference_and_updates.sql` | Adds an outbound editorial link to the WORK Delhi Chapter on `/about`, and a homepage "Community updates" section for a Facebook post (set `v_fb_post` at the top of the file first). Run after `0012`. Safe to re-run |
 
 `0008_demo_data.sql` is sample data, not part of the setup. Run it if you want the dashboard
 populated while you look around; skip it on a database that holds real records. The eight demo

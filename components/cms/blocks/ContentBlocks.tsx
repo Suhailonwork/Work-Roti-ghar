@@ -1,8 +1,10 @@
+import { Fragment } from 'react';
+import { FacebookEmbed } from './FacebookEmbed';
 import { PendingLink as Link } from '@/components/ui/PendingLink';
 import { cn, paragraphs } from '@/lib/utils';
 import { ButtonLink } from '@/components/ui/Button';
 import { ChevronDown } from 'lucide-react';
-import { bool, list, link, safeHref, str, type BlockData } from '@/lib/cms/render';
+import { bool, list, link, parseInlineLinks, safeHref, str, type BlockData } from '@/lib/cms/render';
 
 /**
  * Presentational blocks for the public site.
@@ -19,7 +21,28 @@ export function Prose({ body, className }: { body: string; className?: string })
   return (
     <div className={cn('prose-roti', className)}>
       {parts.map((p, i) => (
-        <p key={i}>{p}</p>
+        <p key={i}>
+          {parseInlineLinks(p).map((segment, j) => {
+            if (!segment.href) return <Fragment key={j}>{segment.text}</Fragment>;
+
+            // An outbound reference opens in a new tab and is isolated from
+            // this page. It is deliberately not `nofollow`: an editor adding a
+            // genuine citation should pass the credit that implies.
+            if (segment.external) {
+              return (
+                <a key={j} href={segment.href} target="_blank" rel="noopener noreferrer">
+                  {segment.text}
+                </a>
+              );
+            }
+
+            return (
+              <Link key={j} href={segment.href}>
+                {segment.text}
+              </Link>
+            );
+          })}
+        </p>
       ))}
     </div>
   );
@@ -475,6 +498,55 @@ export function FaqBlock({ data }: { data: BlockData }) {
             </details>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ----------------------------------------------------------- social embed --
+/** Only real Facebook permalinks may be embedded through this block. */
+function facebookPostUrl(raw: string): string | null {
+  const value = raw.trim();
+  if (!value) return null;
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== 'https:') return null;
+    const host = parsed.hostname.replace(/^www\./, '').toLowerCase();
+    if (host === 'facebook.com' || host === 'fb.com' || host === 'm.facebook.com') {
+      return parsed.toString();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A section built around a single Facebook post.
+ *
+ * The heading and intro copy are ordinary indexable text — that is the part
+ * search engines read, since an embedded post lives inside a third-party
+ * iframe and contributes nothing to this page's content. The embed itself is
+ * deferred until a reader asks for it; see `FacebookEmbed`.
+ */
+export function SocialEmbedBlock({ data }: { data: BlockData }) {
+  const anchorId = str(data, 'id');
+  const title = str(data, 'title');
+  const subtitle = str(data, 'subtitle');
+  const body = str(data, 'body');
+  const caption = str(data, 'caption');
+  const url = facebookPostUrl(str(data, 'url'));
+
+  // A section with a heading but no valid post would be a dead space on the
+  // page, so render nothing at all rather than an empty frame.
+  if (!url) return null;
+
+  return (
+    <section id={anchorId || undefined} className="scroll-mt-24 bg-cream-200 py-12 sm:py-16">
+      <div className="container-narrow">
+        <SectionTitle title={title} subtitle={subtitle} />
+        {body && <Prose body={body} className="mx-auto mb-8 max-w-2xl" />}
+        <FacebookEmbed url={url} caption={caption} />
       </div>
     </section>
   );

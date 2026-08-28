@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { Toaster } from '@/components/ui/Toaster';
 import { SITE_URL } from '@/lib/env';
 import { BRAND_KEYWORDS, SITE_LOCALE } from '@/lib/seo';
@@ -13,6 +14,9 @@ const DEFAULT_DESCRIPTION =
  * ("HTML tag" method) and the meta tag is emitted on every page.
  */
 const googleVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim() || undefined;
+
+/** Google Analytics 4 measurement ID; override per-environment if needed. */
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || 'G-CJNFX062TN';
 
 /**
  * Site-wide defaults. Public pages override these from the CMS via
@@ -95,6 +99,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         {children}
         <Toaster />
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_MEASUREMENT_ID}');`}
+        </Script>
       </body>
     </html>
   );
