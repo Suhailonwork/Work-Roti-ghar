@@ -13,7 +13,7 @@ import {
   RichTextBlock,
   VideoBlock,
 } from './blocks/ContentBlocks';
-import { CommunityPostsBlock, StatisticsBlock } from './blocks/DataBlocks';
+import { CommunityPostsBlock, ContactDetailsBlock, StatisticsBlock } from './blocks/DataBlocks';
 
 /**
  * Renders one CMS block. Unknown block types render nothing rather than
@@ -48,6 +48,8 @@ function Block({ block, stats }: { block: CmsPageBlock; stats: ImpactStats }) {
       return <CtaBlock data={data} />;
     case 'community_posts':
       return <CommunityPostsBlock data={data} />;
+    case 'contact_details':
+      return <ContactDetailsBlock data={data} />;
     case 'custom':
       return <CustomBlock data={data} />;
     default:

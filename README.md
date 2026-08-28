@@ -66,6 +66,7 @@ In the Supabase SQL editor, run the files in `supabase/migrations/` **in order**
 | `0009_fix_contribution_points.sql` | Revokes a contribution's points when the contribution is deleted, and clears strays left by earlier deletions |
 | `0010_seo_workrotighar.sql` | On-page SEO for the `workrotighar` brand: site-wide SEO defaults, homepage meta/Open Graph/Twitter tags, and ~600 words of indexable homepage copy. Safe to re-run |
 | `0011_faq_section.sql` | Homepage FAQ section (11 questions). The page emits FAQPage JSON-LD from these rows, so the markup always matches the visible answers. Run after `0010`. Safe to re-run |
+| `0012_legal_and_contact_pages.sql` | Creates `/contact`, `/privacy-policy` and `/terms-and-conditions` as CMS pages with full SEO, and links all four secondary pages from the homepage. Run after `0011`. Safe to re-run |
 
 `0008_demo_data.sql` is sample data, not part of the setup. Run it if you want the dashboard
 populated while you look around; skip it on a database that holds real records. The eight demo

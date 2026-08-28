@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
   { href: '/support', label: 'Support' },
+  { href: '/contact', label: 'Contact' },
 ];
 
 export function Wordmark({ className }: { className?: string }) {

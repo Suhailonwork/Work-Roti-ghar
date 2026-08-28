@@ -1,11 +1,12 @@
 import { PendingLink as Link } from '@/components/ui/PendingLink';
-import { Lock, MessageSquare } from 'lucide-react';
+import { Lock, Mail, MapPin, MessageSquare, Phone } from 'lucide-react';
 import { Avatar } from '@/components/ui';
 import { ButtonLink } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/server';
+import { getOrgSettings } from '@/lib/cms/queries';
 import { getCurrentUser } from '@/lib/auth';
 import { cn, formatCompact, timeAgo, truncate } from '@/lib/utils';
-import { list, num, str, type BlockData } from '@/lib/cms/render';
+import { bool, link, list, num, safeHref, str, type BlockData } from '@/lib/cms/render';
 import type { ImpactStats } from '@/types/database';
 import { SectionTitle } from './ContentBlocks';
 
@@ -140,6 +141,103 @@ export async function CommunityPostsBlock({ data }: { data: BlockData }) {
         <ButtonLink href="/feed" variant="secondary">
           Open the feed
         </ButtonLink>
+      </div>
+    </section>
+  );
+}
+
+// ------------------------------------------------------------ contact block --
+/**
+ * Contact details, read live from Settings → Organisation.
+ *
+ * Deliberately not stored in the block's own JSON: an address or phone number
+ * typed into a page is a copy that goes stale the moment somebody updates
+ * Settings, and a wrong number on a contact page is worse than no page. The
+ * matching ContactPoint schema is emitted by the page from the same source.
+ */
+export async function ContactDetailsBlock({ data }: { data: BlockData }) {
+  const anchorId = str(data, 'id');
+  const title = str(data, 'title') || 'Contact Roti Ghar';
+  const subtitle = str(data, 'subtitle');
+  const showSocials = bool(data, 'show_socials', true);
+  const cta = link(data, 'cta');
+  const ctaHref = cta ? safeHref(cta.href) : null;
+
+  const org = await getOrgSettings();
+
+  const rows = [
+    org.email && { icon: Mail, label: 'Email', value: org.email, href: `mailto:${org.email}` },
+    org.phone && { icon: Phone, label: 'Phone', value: org.phone, href: `tel:${org.phone}` },
+    org.address && { icon: MapPin, label: 'Address', value: org.address, href: null },
+  ].filter(Boolean) as { icon: typeof Mail; label: string; value: string; href: string | null }[];
+
+  const socials = Object.entries(org.socials ?? {})
+    .map(([name, url]) => [name, (url ?? '').trim()] as const)
+    .filter(([, url]) => /^https?:\/\//i.test(url));
+
+  if (!rows.length && !socials.length) return null;
+
+  return (
+    <section id={anchorId || undefined} className="scroll-mt-24 py-12 sm:py-16">
+      <div className="container-narrow">
+        <SectionTitle title={title} subtitle={subtitle} />
+
+        {rows.length > 0 && (
+          <dl className="grid gap-4 sm:grid-cols-2">
+            {rows.map((row) => {
+              const Icon = row.icon;
+              return (
+                <div
+                  key={row.label}
+                  className="flex items-start gap-3 rounded-2xl border border-clay-200 bg-cream-50 p-5 shadow-card"
+                >
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                    <Icon className="h-4 w-4" aria-hidden />
+                  </span>
+                  <div className="min-w-0">
+                    <dt className="text-xs font-semibold uppercase tracking-wider text-clay-500">
+                      {row.label}
+                    </dt>
+                    <dd className="mt-1 break-words text-sm leading-relaxed text-clay-800">
+                      {row.href ? (
+                        <a href={row.href} className="font-medium text-brand-700 hover:text-brand-800 hover:underline">
+                          {row.value}
+                        </a>
+                      ) : (
+                        row.value
+                      )}
+                    </dd>
+                  </div>
+                </div>
+              );
+            })}
+          </dl>
+        )}
+
+        {showSocials && socials.length > 0 && (
+          <ul className="mt-6 flex flex-wrap justify-center gap-3">
+            {socials.map(([name, url]) => (
+              <li key={name}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="me noopener noreferrer"
+                  className="inline-flex rounded-lg border border-clay-200 bg-cream-50 px-4 py-2 text-sm font-medium capitalize text-brand-800 transition-colors hover:bg-cream-100"
+                >
+                  {name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {cta && ctaHref && (
+          <div className="mt-8 text-center">
+            <ButtonLink href={ctaHref} variant="secondary" size="lg">
+              {cta.label}
+            </ButtonLink>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -348,6 +348,27 @@ export const BLOCK_DEFS: BlockDef[] = [
     defaults: { id: 'faq', title: 'Frequently asked questions', subtitle: '', items: [], open_first: true },
   },
   {
+    type: 'contact_details',
+    label: 'Contact details',
+    description:
+      'Email, phone, address and social links, read live from Settings → Organisation. Nothing to retype here — change the details once in Settings and every page that uses this block follows.',
+    icon: 'mail',
+    fields: [
+      { name: 'id', label: 'Anchor id', type: 'text', help: 'Lets you link to this section with #your-id.' },
+      { name: 'title', label: 'Heading', type: 'text' },
+      { name: 'subtitle', label: 'Sub-heading', type: 'text' },
+      { name: 'show_socials', label: 'Show social links', type: 'boolean' },
+      { name: 'cta', label: 'Button', type: 'link' },
+    ],
+    defaults: {
+      id: '',
+      title: 'Contact Roti Ghar',
+      subtitle: '',
+      show_socials: true,
+      cta: { label: '', href: '' },
+    },
+  },
+  {
     type: 'custom',
     label: 'Custom content',
     description: 'A free-form section with its own background and width.',

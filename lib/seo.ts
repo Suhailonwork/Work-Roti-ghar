@@ -251,6 +251,46 @@ export function websiteJsonLd() {
   };
 }
 
+
+/**
+ * ContactPage + ContactPoint for the contact page.
+ *
+ * Built from the same `site_settings` record the contact block renders, so the
+ * details Google reads are the details on the page. Emitted only when the page
+ * actually carries a contact block — see `app/(site)/[slug]/page.tsx`.
+ */
+export function contactPageJsonLd(org: OrgLike, path: string) {
+  const url = absoluteUrl(path);
+  const contactPoint = {
+    '@type': 'ContactPoint',
+    contactType: 'customer support',
+    email: org.email || undefined,
+    telephone: org.phone || undefined,
+    areaServed: 'IN',
+    availableLanguage: ['en', 'hi', 'ur'],
+  };
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    '@id': `${url}#contact`,
+    url,
+    name: `Contact ${org.name || 'Roti Ghar'}`,
+    description: `Get in touch with ${org.name || 'Roti Ghar'} — email, phone and address for the Workrotighar volunteer team.`,
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+    about: {
+      '@type': 'NGO',
+      '@id': `${SITE_URL}/#organisation`,
+      name: org.name || 'Roti Ghar',
+      email: org.email || undefined,
+      telephone: org.phone || undefined,
+      address: org.address || undefined,
+      sameAs: sameAs(org),
+      contactPoint: [contactPoint],
+    },
+  };
+}
+
 /** Breadcrumb JSON-LD for pages below the homepage. */
 export function breadcrumbJsonLd(trail: { name: string; path: string }[]) {
   return {

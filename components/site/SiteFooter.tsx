@@ -9,6 +9,7 @@ const COLUMNS = [
       { href: '/', label: 'Home' },
       { href: '/about', label: 'About us' },
       { href: '/support', label: 'Support our work' },
+      { href: '/contact', label: 'Contact us' },
     ],
   },
   {
@@ -17,6 +18,13 @@ const COLUMNS = [
       { href: '/login', label: 'Sign in' },
       { href: '/signup', label: 'Apply to join' },
       { href: '/feed', label: 'Community feed' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { href: '/privacy-policy', label: 'Privacy Policy' },
+      { href: '/terms-and-conditions', label: 'Terms & Conditions' },
     ],
   },
 ];
@@ -28,7 +36,7 @@ export async function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-clay-200 bg-brand-950 text-cream-200">
       <div className="container-page py-12 sm:py-14">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2.5">
               <span
@@ -97,6 +105,12 @@ export async function SiteFooter() {
             </Link>
             <Link href="/support" className="hover:text-cream-50">
               Offer support
+            </Link>
+            <Link href="/privacy-policy" className="hover:text-cream-50">
+              Privacy
+            </Link>
+            <Link href="/terms-and-conditions" className="hover:text-cream-50">
+              Terms
             </Link>
           </div>
         </div>
